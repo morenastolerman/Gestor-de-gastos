@@ -57,7 +57,6 @@ sequenceDiagram
                 deactivate Controller
             end
         end
-
         ControlGastos-->>Controller: true
         deactivate ControlGastos
         Controller-->>Usuario: Confirmación de registro
