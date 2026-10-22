@@ -1,10 +1,11 @@
+```mermaid
 classDiagram
     direction TB
     class Observador {
         <<interface>>
         +actualizar(msg: String)
     }
-    class GUI {
+    class Controller {
         +iniciar()
         +ingresarDatosConsumo(monto: double, fecha: Date, descripcion: String, cuotas: int, categoria: Categoria, medioPago: MedioPago)
         -validarDatos(monto: double, fecha: Date) boolean
@@ -108,8 +109,8 @@ classDiagram
         -id: int
         -nombre: String
     }
-    GUI ..|> Observador
-    GUI ..> ControlGastos : usa
+    Controller ..|> Observador
+    Controller ..> ControlGastos : usa
     CriterioCategoria ..|> Criterio
     CriterioRangoFechas ..|> Criterio
     ReporteEstadistico ..|> Reporte
@@ -129,6 +130,7 @@ classDiagram
     Limite "*" --> "0..1" Categoria
     Limite ..> Semaforo
     Limite -- Periodo
-    GUI ..> Consumo : crea
-    GUI ..> Categoria
-    GUI ..> MedioPago
+    Controller ..> Consumo : crea
+    Controller ..> Categoria
+    Controller ..> MedioPago
+```
