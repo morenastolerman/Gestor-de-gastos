@@ -62,4 +62,5 @@ sequenceDiagram
         Controller-->>Usuario: Confirmación de registro
     end
     deactivate Controller
-'''
+
+```
