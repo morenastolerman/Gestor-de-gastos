@@ -1,5 +1,150 @@
 ```mermaid
 classDiagram
+    class Controller {
+        - ControlGasto controlGasto
+        + Controller(Repositorio repositorio)
+        + agregarLimite(Limite l) void
+        - validarDatos(double monto, LocalDate fecha, int cuotas, Categoria categoria) boolean
+        + ingresarDatosConsumo(double monto, LocalDate fecha, String descripcion, int cuotas, Categoria categoria, MedioPago medioDePago) void
+        + actualizar(Semaforo estado, String mensaje) void
+    }
+
+    class ControlGasto {
+        - Repositorio repositorio
+        - List~Limite~ limites
+        - Controller controller
+        + ControlGasto(Repositorio repositorio, Controller controller)
+        + agregarLimite(Limite l) void
+        + registrar(Consumo c) boolean
+        - calcularGastado(Limite l) double
+        - notificar(Semaforo estado, String mensaje) void
+    }
+
+    class Repositorio {
+        <<interface>>
+        + guardar(Consumo c) void
+        + listar() List~Consumo~
+    }
+
+    class RepositorioArchivo {
+        - String SEP$
+        - Path archivo
+        + RepositorioArchivo(String ruta)
+        + RepositorioArchivo()
+        + guardar(Consumo c) void
+        + listar() List~Consumo~
+        - siguienteId() int
+        - aLinea(Consumo c) String
+        - deLinea(String linea) Consumo
+        - limpiar(String s) String
+    }
+
+    class Consumo {
+        - int id
+        - double monto
+        - LocalDate fecha
+        - String descripcion
+        - int cuotas
+        - Categoria categoria
+        - MedioPago medioDePago
+        + Consumo(double monto, LocalDate fecha, String descripcion, int cuotas, Categoria categoria, MedioPago medioDePago)
+        + Consumo(int id, double monto, LocalDate fecha, String descripcion, int cuotas, Categoria categoria, MedioPago medioDePago)
+        + getId() int
+        + setId(int id) void
+        + getMonto() double
+        + getFecha() LocalDate
+        + getDescripcion() String
+        + getMedioDePago() MedioPago
+        + getCuotas() int
+        + getCategoria() Categoria
+        - montoCuota() double
+    }
+
+    class Categoria {
+        - int id
+        - String nombre
+        + Categoria(int id, String nombre)
+        + getId() int
+        + getNombre() String
+    }
+
+    class MedioPago {
+        - int id
+        - String nombre
+        + MedioPago(int id, String nombre)
+        + getId() int
+        + getNombre() String
+    }
+
+    class Limite {
+        <<abstract>>
+        # double monto
+        # LocalDate fechaInicio
+        # double umbral
+        + Limite(double monto, LocalDate fechaInicio, double umbral)
+        + saldo(double gastado) double
+        + estado(double gastado) Semaforo
+        + aplica(Consumo c) boolean*
+    }
+
+    class LimiteMensual {
+        + LimiteMensual(double monto, LocalDate fechaInicio, double umbral)
+        + aplica(Consumo c) boolean
+    }
+
+    class LimiteCategoria {
+        - Categoria categoria
+        + LimiteCategoria(double monto, LocalDate fechaInicio, double umbral, Categoria categoria)
+        + aplica(Consumo c) boolean
+    }
+
+    class Reporte {
+        <<interface>>
+        + generar(List~Consumo~ consumo, LocalDate desde, LocalDate hasta) String
+    }
+
+    class ReporteEstadistico {
+        + generar(List~Consumo~ consumo, LocalDate desde, LocalDate hasta) String
+    }
+
+    class ReporteGastosPeriodo {
+        + generar(List~Consumo~ consumo, LocalDate desde, LocalDate hasta) String
+    }
+
+    class Semaforo {
+        <<enumeration>>
+        ROJO
+        AMARILLO
+        VERDE
+    }
+
+    Controller "1" *-- "1" ControlGasto : contiene
+    ControlGasto "1" --> "1" Controller : llama (callback)
+    ControlGasto "1" o-- "*" Limite : aplica
+    ControlGasto "1" --> "1" Repositorio : usa
+
+    Repositorio <|.. RepositorioArchivo : implementa
+    Limite <|-- LimiteMensual : hereda
+    Limite <|-- LimiteCategoria : hereda
+    LimiteCategoria "1" --> "1" Categoria : se asocia a
+
+    Consumo "*" --> "1" Categoria : tiene
+    Consumo "*" --> "1" MedioPago : tiene
+
+    Reporte <|.. ReporteEstadistico : implementa
+    Reporte <|.. ReporteGastosPeriodo : implementa
+
+    Controller ..> Consumo : crea
+    Repositorio ..> Consumo : persiste
+    Reporte ..> Consumo : analiza
+    Limite ..> Consumo : evalúa
+    Limite ..> Semaforo : devuelve
+    ControlGasto ..> Semaforo : usa
+    Controller ..> Semaforo : usa
+```
+-------------------------------------------------------
+```mermaid
+classDiagram
     direction TB
     class Observador {
         <<interface>>
