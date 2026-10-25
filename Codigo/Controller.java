@@ -11,10 +11,8 @@ public class Controller {
         this.controlGasto = new ControlGasto(repositorio);
     }
 
-    //ingresarDatosConsumo()
-    // ValidarDatos(monto, fecha)
-    public void definirLimite(Limite l){
-        controlGasto.definirLimite(l);
+    public void agregarLimite(Limite l) {
+        controlGasto.agregarLimite(l);
     }
 
     private boolean validarDatos(Double monto, LocalDate fecha, int cuotas, Categoria categoria){

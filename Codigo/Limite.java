@@ -38,6 +38,7 @@ public abstract class Limite {
 
     // Para ver si el consumo aplica a ese limite
     public abstract boolean aplica(Consumo c);
+    public abstract boolean mismoPeriodo(Limite otro);
 
     
 
