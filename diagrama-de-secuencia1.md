@@ -2,65 +2,60 @@
 sequenceDiagram
     actor Usuario
     participant Controller
-    participant ControlGastos
-    participant RepositorioArchivo
-    participant Limite
+    participant ControlGasto
+    participant R as RepositorioArchivo
+    participant L as limite : LimiteMensual
 
-    Usuario->>Controller: ingresarDatosConsumo(monto, fecha, ...)
+    Usuario->>Controller: ingresarDatosConsumo(monto, fecha, descripcion, cuotas, categoria, medioDePago)
     activate Controller
 
-    Controller->>Controller: validarDatos(monto, fecha)
-    activate Controller
-    deactivate Controller
+    Controller->>Controller: validarDatos(monto, fecha, cuotas, categoria)
 
-    alt Datos Inválidos
-        Controller-->>Usuario: Mostrar error ("Datos incorrectos o incompletos")
-    else Datos Válidos
-        create participant C as c: Consumo
-        Controller-->>C: <<create>> new Consumo(monto, fecha, ...)
+    alt Datos inválidos
+        Controller-->>Usuario: "Datos incorrectos o incompletos"
+    else Datos válidos
+        create participant C as c : Consumo
+        Controller->>C: new Consumo(monto, fecha, descripcion, cuotas, categoria, medioDePago)
 
-        Controller->>ControlGastos: registrar(c)
-        activate ControlGastos
+        Controller->>ControlGasto: registrar(c)
+        activate ControlGasto
 
-        ControlGastos->>RepositorioArchivo: guardar(c)
-        activate RepositorioArchivo
-        deactivate RepositorioArchivo
+        ControlGasto->>R: guardar(c)
+        activate R
+        R-->>ControlGasto: (id asignado)
+        deactivate R
 
-        loop Para cada Límite
-            ControlGastos->>Limite: estado(gastado)
-            activate Limite
-            Limite-->>ControlGastos: Semaforo
-            deactivate Limite
+        ControlGasto->>L: aplica(c)
+        L-->>ControlGasto: boolean
 
-            alt Semaforo == ROJO
-                ControlGastos->>ControlGastos: notificar("Límite excedido")
-                activate ControlGastos
-                deactivate ControlGastos
-                ControlGastos->>Controller: actualizar("Límite excedido (ROJO)")
-                activate Controller
-                Controller-->>Usuario: Mostrar alerta (Rojo)
-                deactivate Controller
-            else Semaforo == AMARILLO
-                ControlGastos->>ControlGastos: notificar("Advertencia de límite")
-                activate ControlGastos
-                deactivate ControlGastos
-                ControlGastos->>Controller: actualizar("Advertencia (AMARILLO)")
-                activate Controller
-                Controller-->>Usuario: Mostrar advertencia (Amarillo)
-                deactivate Controller
-            else Semaforo == VERDE
-                ControlGastos->>ControlGastos: notificar("Estado normal")
-                activate ControlGastos
-                deactivate ControlGastos
-                ControlGastos->>Controller: actualizar("Estado OK (VERDE)")
-                activate Controller
-                deactivate Controller
+        opt aplica == true
+            ControlGasto->>ControlGasto: calcularGastado(limite)
+            ControlGasto->>R: listar()
+            R-->>ControlGasto: lista de consumos
+
+            ControlGasto->>L: estado(gastado)
+            L-->>ControlGasto: Semaforo
+
+            alt ROJO
+                ControlGasto->>ControlGasto: alertas.add("ALERTA: Límite excedido (ROJO)")
+            else AMARILLO
+                ControlGasto->>ControlGasto: alertas.add("ADVERTENCIA: Cerca del límite (AMARILLO)")
+            else VERDE
+                Note over ControlGasto: no se alerta
             end
         end
-        ControlGastos-->>Controller: true
-        deactivate ControlGastos
-        Controller-->>Usuario: Confirmación de registro
+
+        ControlGasto-->>Controller: lista de alertas
+        deactivate ControlGasto
+
+        Controller-->>Usuario: "Consumo registrado correctamente"
+        opt hay alerta
+            Controller-->>Usuario: println(alerta)
+        end
     end
     deactivate Controller
+
+```
+
 
 ```
