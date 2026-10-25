@@ -26,3 +26,14 @@ Gestión de entidades maestras ( CU8 , CU9 ): El sistema debe permitir administr
 Generación de reportes y análisis ( CU10 , CU11 ): El sistema debe generar reportes estadísticos de distribución del gasto (CU10) y permitir consultar los gastos consolidados correspondientes a un período determinado (CU11).
 Persistencia y carga inicial ( CU12 ): El sistema debe cargar automáticamente en memoria la configuración inicial y el historial de datos desde el archivo local al momento del arranque.
 
+P4. Requerimientos no funcionales
+RNF01: Rendimiento y tiempo de procesamiento (Performance)
+El sistema debe procesar y guardar un consumo en un tiempo máximo de 3 segundos. Asimismo, las consultas de saldos, el filtrado de consumos y la generación de reportes deben ejecutarse en tiempos adecuados para garantizar una interacción fluida.
+
+RNF02: Usabilidad y consistencia visual (Usability)
+La interfaz debe permitir registrar un gasto en efectivo en un máximo de [VER] toques desde la pantalla de inicio y diferenciar claramente los métodos de pago mediante indicadores visuales consistentes en todas las pantallas.
+
+RNF03: Persistencia local y exportación de reportes (Storage)
+Toda la información del sistema, incluidos consumos, presupuestos, categorías y medios de pago, debe almacenarse en archivos locales en formato CSV. Al iniciar la aplicación, los datos deben recuperarse automáticamente. Asimismo, el sistema debe permitir exportar reportes de gastos en formato CSV.
+
+
