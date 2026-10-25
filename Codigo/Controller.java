@@ -13,8 +13,8 @@ public class Controller {
 
     //ingresarDatosConsumo()
     // ValidarDatos(monto, fecha)
-    public void agregarLimite(Limite l){
-        controlGasto.agregarLimite(l);
+    public void definirLimite(Limite l){
+        controlGasto.definirLimite(l);
     }
 
     private boolean validarDatos(Double monto, LocalDate fecha, int cuotas, Categoria categoria){
