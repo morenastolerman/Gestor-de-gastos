@@ -33,6 +33,36 @@ El sistema debe procesar y guardar un consumo en un tiempo máximo de 3 segundos
 RNF02: Usabilidad y consistencia visual (Usability)
 La interfaz debe permitir registrar un gasto en efectivo en un máximo de [VER] toques desde la pantalla de inicio y diferenciar claramente los métodos de pago mediante indicadores visuales consistentes en todas las pantallas.
 
+
+1. Módulo 1: Consumos 
+Valores por defecto inteligentes: Al abrir la pantalla de registro, completar automáticamente la fecha de hoy y seleccionar la última categoría o medio de pago utilizado para agilizar la carga.
+Nota/Concepto con hashtags de búsqueda: Permitir incluir etiquetas en el concepto (ej. "Almuerzo #trabajo" o "Nafta #viaje") para facilitar el filtrado posterior en CU04.
+Validación en tiempo real: Deshabilitar el botón de guardado si el monto es 0 o negativo, mostrando una sugerencia en rojo antes de enviar los datos.
+
+2. Módulo 2: Presupuesto y Alertas 
+Sistema de Alerta por Semáforo:
+🟢 Verde (< 70%): Estado óptimo / Presupuesto saludable.
+🟡 Amarillo (70% - 99%): Advertencia preventiva ("Atención: Has consumido el 85% del límite").
+🔴 Rojo (≥ 100%): Alerta de sobregiro (CU07) disparada mediante un diálogo flotante al registrar el gasto.
+Reinicio Automático de Período: Que el presupuesto venza y se reinicie automáticamente el primer día del mes (ej. 1 de cada mes) sin borrar el historial anterior.
+
+3. Módulo 3: Entidades Maestras 
+Categorías Predefinidas (Semilla): Incluir un conjunto básico de categorías de fábrica (Comida, Transporte, Servicios, Salud, Entretenimiento) para que el sistema sea útil desde el segundo cero.
+Aprovechamiento del Polimorfismo en Medios de Pago:
+Tarjeta de Crédito: Permitir ingresar recargos por cuotas.
+Efectivo / Débito: Descuento directo sin comisiones.
+Transferencia: Guardar alias/CBU asociado.
+
+4. Módulo 4: Análisis e Informes 
+Resumen de Distribución Porcentual: Mostrar el porcentaje del presupuesto consumido por cada categoría (ej. 40% Supermercado, 25% Alquiler, 15% Servicios).
+Comparativa Mensual Básica: Mostrar la diferencia de gasto total entre el mes actual y el mes anterior ("Gastaste un 12% más que el mes pasado").
+
+5. Módulo 5: Persistencia y Configuración 
+Configuración Inicial Silenciosa (CU14 e CU13): Si al arrancar la aplicación no se detecta el archivo de datos local (gastos.csv o datos.json), el sistema genera automáticamente el archivo base con las categorías e instancias maestras por defecto sin preguntarle al usuario.
+Formato Estructurado CSV / TXT (CU12): Guardar los registros en formato separado por comas (fecha,monto,concepto,categoria,medioPago). Esto facilita la lectura con BufferedReader en Java y permite abrir el archivo en Excel.
+Auto-guardado al Salir (Auto-save): Ejecutar la exportación a disco automáticamente al cerrar la ventana principal de la aplicación, previniendo pérdidas por cierres inesperados.
+
+
 RNF03: Persistencia local y exportación de reportes (Storage)
 Toda la información del sistema, incluidos consumos, presupuestos, categorías y medios de pago, debe almacenarse en archivos locales en formato CSV. Al iniciar la aplicación, los datos deben recuperarse automáticamente. Asimismo, el sistema debe permitir exportar reportes de gastos en formato CSV.
 
