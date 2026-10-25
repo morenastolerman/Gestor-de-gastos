@@ -5,8 +5,8 @@ import java.time.YearMonth;
 
 public class LimiteMensual extends Limite {
 
-    public LimiteMensual(double monto, LocalDate fechaInicio, double umbral) {
-        super(monto, fechaInicio, umbral);
+    public LimiteMensual(int monto, LocalDate fechaInicio) {
+        super(monto,fechaInicio);
     }
 
     @Override

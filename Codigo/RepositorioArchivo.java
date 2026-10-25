@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class RepositorioArchivo implements Repositorio {
     private static final String SEP = ";";
     private final Path archivo;
@@ -18,7 +19,7 @@ public class RepositorioArchivo implements Repositorio {
     public RepositorioArchivo(String ruta) {
         this.archivo = Paths.get(ruta);
     }
-
+    
     public RepositorioArchivo() {
         this("consumos.csv");
     }
@@ -86,5 +87,9 @@ public class RepositorioArchivo implements Repositorio {
     private String limpiar(String s) {
         if (s == null) return "";
         return s.replace(SEP, ",").replace("\r", " ").replace("\n", " ");
-    }   
+    }
+    
+    
+    //-----------------------------------------------
+
 }

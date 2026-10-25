@@ -4,33 +4,32 @@ import java.time.LocalDate;
 public abstract class Limite {
     protected double monto; 
     protected LocalDate fechaInicio;
-    protected double umbral;
+    private static final double rojo = 0.95;
+    private static final double amarillo = 0.80;
     
     // CONSTRUCTOR
-    public Limite(double monto,LocalDate fechaInicio, double umbral) {
+    public Limite(double monto,LocalDate fechaInicio) {
         if (monto <= 0)
             throw new IllegalArgumentException("El monto debe ser mayor a 0");
         if (fechaInicio == null)
             throw new IllegalArgumentException("La fecha de inicio es obligatoria");
-        if (umbral <= 0)
-            throw new IllegalArgumentException("El umbral debe ser mayor a 0");
-
+        
         this.monto = monto;
         this.fechaInicio = fechaInicio;
-        this.umbral = umbral;
+        
         
     }
 
     // +saldo(gastado: double) : double
     public double saldo(double gastado){
-        return umbral - gastado;
+        return monto - gastado;
     }
 
     // +estado(gastado: double) : Semaforo
     public Semaforo estado(double gastado){
-        if(gastado >= umbral*0.95){
+        if(gastado >= monto*rojo){
             return Semaforo.ROJO;
-        }else if(gastado >= umbral*0.80 && gastado < umbral*0.95){
+        }else if(gastado >= monto*rojo && gastado < monto*amarillo){
             return Semaforo.AMARILLO;
         }
         return Semaforo.VERDE;

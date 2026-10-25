@@ -2,6 +2,7 @@ package Codigo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
 
 public class ControlGasto {
     private Repositorio repositorio;
@@ -48,4 +49,23 @@ public class ControlGasto {
         }
         return total;
     }
+    //------------------------------------------------------------------
+    private List<MedioPago> mediosPago = new ArrayList<>();
+    private int proximoIdMedio = 1;
+
+    // true si lo agregó; false si ya existía uno con ese nombre
+    public boolean agregarMedioPago(String nombre) {
+        for (MedioPago m : mediosPago) {
+            if (m.getNombre().equalsIgnoreCase(nombre)) {
+                return false;
+            }
+        }
+        mediosPago.add(new MedioPago(proximoIdMedio++, nombre));
+        return true;
+    }
+
+    public List<MedioPago> getMediosPago() {
+        return Collections.unmodifiableList(mediosPago);
+    }
+
 }
