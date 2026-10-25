@@ -6,12 +6,10 @@ import java.util.List;
 public class ControlGasto {
     private Repositorio repositorio;
     private List<Limite> limites = new ArrayList<>();
-    private Controller controller;
 
     
-    public ControlGasto(Repositorio repositorio, Controller controller) {
+    public ControlGasto(Repositorio repositorio) {
         this.repositorio = repositorio;
-        this.controller = controller;
     }
 
 
@@ -19,8 +17,9 @@ public class ControlGasto {
         limites.add(l);
     }
 
-    public boolean registrar(Consumo c){
+    public List<String> registrar(Consumo c){
         repositorio.guardar(c);
+        List<String> alertas = new ArrayList<>();
         //limite.estado(c.getMonto());
       for (Limite l : limites) {
             if (!l.aplica(c)) continue;          // solo los límites que corresponden a este consumo
@@ -28,19 +27,13 @@ public class ControlGasto {
             double gastado = calcularGastado(l);
             Semaforo estado = l.estado(gastado);
 
-            switch (estado) {
-                case ROJO:
-                    notificar(estado, "Límite excedido (ROJO)");
-                    break;
-                case AMARILLO:
-                    notificar(estado, "Advertencia (AMARILLO)");
-                    break;
-                case VERDE:
-                    notificar(estado, "Estado OK (VERDE)");
-                    break;
+            if (estado == Semaforo.ROJO) {
+                alertas.add("ALERTA: Límite excedido (ROJO)");
+            } else if (estado == Semaforo.AMARILLO) {
+                alertas.add("ADVERTENCIA: Cerca del límite (AMARILLO)");
             }
         }
-        return true;
+        return alertas;
     }
 
     // suma los consumos guardados que caen dentro del límite
@@ -50,10 +43,6 @@ public class ControlGasto {
             if (l.aplica(c)) total += c.getMonto();
         }
         return total;
-    }
-
-    private void notificar(Semaforo estado, String mensaje){
-        controller.actualizar(estado, mensaje);
     }
 
 }

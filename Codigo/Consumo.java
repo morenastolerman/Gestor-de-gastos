@@ -66,11 +66,4 @@ public class Consumo {
         return categoria;
     }
 
-
-    //+montoCuota() : double
-    private double montoCuota(){
-        return monto/cuotas;
-
-    }
-
 }

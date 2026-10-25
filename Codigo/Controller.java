@@ -2,12 +2,13 @@ package Codigo;
 
 import java.time.LocalDate;
 import java.time.chrono.ChronoLocalDate;
+import java.util.List;
 
 public class Controller {
     private ControlGasto controlGasto;
 
     public Controller(Repositorio repositorio){
-        this.controlGasto = new ControlGasto(repositorio, this);
+        this.controlGasto = new ControlGasto(repositorio);
     }
 
     //ingresarDatosConsumo()
@@ -27,18 +28,14 @@ public class Controller {
             MedioPago medioDePago){
         if(validarDatos(monto, fecha, cuotas, categoria)){
             Consumo consumo = new  Consumo(monto, fecha, descripcion, cuotas, categoria, medioDePago);
-            controlGasto.registrar(consumo);
+            List<String> alertas = controlGasto.registrar(consumo);  
             System.out.println("Consumo registrado correctamente");
+            for (String alerta : alertas) {
+                System.out.println(alerta);
+            }
         }else{
             System.out.println("Datos incorrectos o incompletos");
         }
     }
 
-    public void actualizar(Semaforo estado, String mensaje){
-        if (estado == Semaforo.ROJO) {
-            System.out.println("ALERTA: " + mensaje);
-        } else if (estado == Semaforo.AMARILLO) {
-            System.out.println("ADVERTENCIA: " + mensaje);
-        }
-    }
 }
