@@ -1,23 +1,41 @@
 ```mermaid
 classDiagram
+    class Vista {
+        <<vista>>
+        - Controller controller
+        + Vista(Controller controller)
+        + mostrarPantallaPrincipal() void
+        + mostrarRegistroConsumo() void
+        + mostrarConsumos(List~Consumo~ consumos) void
+        + mostrarLimites() void
+        + mostrarReporte(String reporte) void
+        + mostrarMensaje(String mensaje) void
+        + mostrarAlertas(List~String~ alertas) void
+        + clicRegistrar() void
+        + clicFiltrar() void
+        + clicDefinirLimite() void
+        + clicGenerarReporte() void
+    }
+
     class Controller {
         - ControlGasto controlGasto
         + Controller(Repositorio repositorio)
         + agregarLimite(Limite l) void
+        + ingresarDatosConsumo(double monto, LocalDate fecha, String descripcion, int cuotas, Categoria categoria, MedioPago medioDePago) List~String~
+        + consultarConsumos(Criterio criterio) List~Consumo~
+        + pedirReporte(Reporte r, LocalDate desde, LocalDate hasta) String
         - validarDatos(double monto, LocalDate fecha, int cuotas, Categoria categoria) boolean
-        + ingresarDatosConsumo(double monto, LocalDate fecha, String descripcion, int cuotas, Categoria categoria, MedioPago medioDePago) void
-        + actualizar(Semaforo estado, String mensaje) void
     }
 
     class ControlGasto {
         - Repositorio repositorio
         - List~Limite~ limites
-        - Controller controller
-        + ControlGasto(Repositorio repositorio, Controller controller)
+        + ControlGasto(Repositorio repositorio)
         + agregarLimite(Limite l) void
-        + registrar(Consumo c) boolean
+        + registrar(Consumo c) List~String~
+        + filtrar(Criterio criterio) List~Consumo~
+        + generarReporte(Reporte r, LocalDate desde, LocalDate hasta) String
         - calcularGastado(Limite l) double
-        - notificar(Semaforo estado, String mensaje) void
     }
 
     class Repositorio {
@@ -57,7 +75,6 @@ classDiagram
         + getMedioDePago() MedioPago
         + getCuotas() int
         + getCategoria() Categoria
-        - montoCuota() double
     }
 
     class Categoria {
@@ -84,7 +101,7 @@ classDiagram
         + Limite(double monto, LocalDate fechaInicio, double umbral)
         + saldo(double gastado) double
         + estado(double gastado) Semaforo
-        + aplica(Consumo c) boolean*
+        + aplica(Consumo c)* boolean
     }
 
     class LimiteMensual {
@@ -98,17 +115,33 @@ classDiagram
         + aplica(Consumo c) boolean
     }
 
+    class Criterio {
+        <<interface>>
+        + cumple(Consumo c) boolean
+    }
+
+    class CriterioCategoria {
+        - Categoria categoria
+        + cumple(Consumo c) boolean
+    }
+
+    class CriterioRangoFechas {
+        - LocalDate desde
+        - LocalDate hasta
+        + cumple(Consumo c) boolean
+    }
+
     class Reporte {
         <<interface>>
-        + generar(List~Consumo~ consumo, LocalDate desde, LocalDate hasta) String
+        + generar(List~Consumo~ consumos, LocalDate desde, LocalDate hasta) String
     }
 
     class ReporteEstadistico {
-        + generar(List~Consumo~ consumo, LocalDate desde, LocalDate hasta) String
+        + generar(List~Consumo~ consumos, LocalDate desde, LocalDate hasta) String
     }
 
     class ReporteGastosPeriodo {
-        + generar(List~Consumo~ consumo, LocalDate desde, LocalDate hasta) String
+        + generar(List~Consumo~ consumos, LocalDate desde, LocalDate hasta) String
     }
 
     class Semaforo {
@@ -118,164 +151,30 @@ classDiagram
         VERDE
     }
 
+    Vista --> Controller : le pide las acciones
     Controller "1" *-- "1" ControlGasto : contiene
-    ControlGasto "1" --> "1" Controller : llama (callback)
-    ControlGasto "1" o-- "*" Limite : aplica
+    ControlGasto "1" o-- "*" Limite : controla
     ControlGasto "1" --> "1" Repositorio : usa
 
     Repositorio <|.. RepositorioArchivo : implementa
     Limite <|-- LimiteMensual : hereda
     Limite <|-- LimiteCategoria : hereda
-    LimiteCategoria "1" --> "1" Categoria : se asocia a
+    LimiteCategoria "*" --> "1" Categoria : se asocia a
 
     Consumo "*" --> "1" Categoria : tiene
     Consumo "*" --> "1" MedioPago : tiene
 
+    Criterio <|.. CriterioCategoria : implementa
+    Criterio <|.. CriterioRangoFechas : implementa
     Reporte <|.. ReporteEstadistico : implementa
     Reporte <|.. ReporteGastosPeriodo : implementa
 
     Controller ..> Consumo : crea
+    ControlGasto ..> Criterio : aplica
+    ControlGasto ..> Reporte : ejecuta
+    ControlGasto ..> Semaforo : usa
     Repositorio ..> Consumo : persiste
     Reporte ..> Consumo : analiza
     Limite ..> Consumo : evalúa
     Limite ..> Semaforo : devuelve
-    ControlGasto ..> Semaforo : usa
-    Controller ..> Semaforo : usa
-```
--------------------------------------------------------
-```mermaid
-classDiagram
-    direction TB
-    class Observador {
-        <<interface>>
-        +actualizar(msg: String)
-    }
-    class Controller {
-        +iniciar()
-        +ingresarDatosConsumo(monto: double, fecha: Date, descripcion: String, cuotas: int, categoria: Categoria, medioPago: MedioPago)
-        -validarDatos(monto: double, fecha: Date) boolean
-        +actualizar(msg: String)
-    }
-    class Criterio {
-        <<interface>>
-        +cumple(c: Consumo) boolean
-    }
-    class CriterioCategoria {
-        -categoria: Categoria
-        +cumple(c: Consumo) boolean
-    }
-    class CriterioRangoFechas {
-        -desde: Date
-        -hasta: Date
-        +cumple(c: Consumo) boolean
-    }
-    class Reporte {
-        <<interface>>
-        +generar(consumos: List~Consumo~, desde: Date, hasta: Date) String
-    }
-    class ReporteEstadistico {
-        +generar(consumos: List~Consumo~, desde: Date, hasta: Date) String
-    }
-    class ReporteGastosPeriodo {
-        +generar(consumos: List~Consumo~, desde: Date, hasta: Date) String
-    }
-    class Repositorio {
-        <<interface>>
-        +guardar(c: Consumo)
-        +cargar() List~Consumo~
-        +importar(archivo: String) List~Consumo~
-    }
-    class RepositorioArchivo {
-        -ruta: String
-        +guardar(c: Consumo)
-        +cargar() List~Consumo~
-        +importar(archivo: String) List~Consumo~
-    }
-    class Semaforo {
-        <<enumeration>>
-        VERDE
-        AMARILLO
-        ROJO
-    }
-    class Periodo {
-        <<enumeration>>
-        SEMANAL
-        MENSUAL
-    }
-    class ControlGastos {
-        -instancia: ControlGastos$
-        -consumos: List~Consumo~
-        -limites: List~Limite~
-        -categorias: List~Categoria~
-        -medios: List~MedioPago~
-        -obs: List~Observador~
-        -repositorio: Repositorio
-        +getInstancia()$ ControlGastos
-        +registrar(c: Consumo) boolean
-        +modificar(c: Consumo) boolean
-        +eliminar(id: int) boolean
-        +filtrar(c: Criterio) List~Consumo~
-        +definirLimite(l: Limite)
-        +consultarEstado(l: Limite) Semaforo
-        +suscribir(o: Observador)
-        +desuscribir(o: Observador)
-        +notificar(msg: String)
-        +reporte(r: Reporte, desde: Date, hasta: Date) String
-        +getCategorias() List~Categoria~
-        +getMedios() List~MedioPago~
-        -calcularGastado(l: Limite) double
-    }
-    class Consumo {
-        -id: int
-        -monto: double
-        -fecha: Date
-        -descripcion: String
-        -cuotas: int
-        -categoria: Categoria
-        -medioPago: MedioPago
-        +montoCuota() double
-        +Consumo(id: int, monto: double, fecha: Date, descripcion: String, cuotas: int, categoria: Categoria, medioPago: MedioPago)
-        +montoCuota() double
-    }
-    class Limite {
-        -monto: double
-        -periodo: Periodo
-        -fechaInicio: Date
-        -umbral: double
-        -categoria: Categoria
-        +saldo(gastado: double) double
-        +estado(gastado: double) Semaforo
-    }
-    class Categoria {
-        -id: int
-        -nombre: String
-    }
-    class MedioPago {
-        -id: int
-        -nombre: String
-    }
-    Controller ..|> Observador
-    Controller ..> ControlGastos : usa
-    CriterioCategoria ..|> Criterio
-    CriterioRangoFechas ..|> Criterio
-    ReporteEstadistico ..|> Reporte
-    ReporteGastosPeriodo ..|> Reporte
-    RepositorioArchivo ..|> Repositorio
-    ControlGastos "1" o-- "*" Consumo
-    ControlGastos "1" o-- "*" Limite
-    ControlGastos "1" o-- "*" Categoria
-    ControlGastos "1" o-- "*" MedioPago
-    ControlGastos "1" --> "*" Observador : notifica
-    ControlGastos --> Repositorio : utiliza
-    ControlGastos ..> Criterio : aplica
-    ControlGastos ..> Reporte : ejecuta
-    ControlGastos ..> Semaforo
-    Consumo "*" --> "1" Categoria
-    Consumo "*" --> "1" MedioPago
-    Limite "*" --> "0..1" Categoria
-    Limite ..> Semaforo
-    Limite -- Periodo
-    Controller ..> Consumo : crea
-    Controller ..> Categoria
-    Controller ..> MedioPago
 ```
