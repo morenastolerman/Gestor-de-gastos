@@ -1,22 +1,36 @@
 package Codigo;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        // Borrá consumos.csv y medios.csv antes de correr para empezar de cero
+        // Borrá consumos.csv, medios.csv y categorias.csv antes de correr para empezar de cero
         Controller controller = new Controller(new RepositorioArchivo());
 
-        Categoria comida = new Categoria(1, "Comida");
+        // ---- CU7: categorías ----
+        mostrar(controller.agregarCategoria("Alimentos"));
+        mostrar(controller.agregarCategoria("alimentos"));   // ya existe
+        mostrar(controller.agregarCategoria("   "));         // inválido
+        mostrar(controller.agregarCategoria("Alquiler"));
+        mostrar(controller.agregarCategoria("Transporte"));
+        mostrar(controller.agregarCategoria("Ocio"));
 
-        // ---- CU8 ----
+        Categoria alimentos = buscarCategoria(controller, "Alimentos");
+        Categoria ocio = buscarCategoria(controller, "Ocio");
+        Categoria transporte = buscarCategoria(controller, "Transporte");
+
+        mostrar(controller.modificarCategoria(ocio.getId(), "Entretenimiento"));
+        mostrar(controller.modificarCategoria(ocio.getId(), "Alimentos"));  // nombre en uso
+
+        // ---- CU8: medios de pago ----
         mostrar(controller.agregarMedioPago("Efectivo"));
         mostrar(controller.agregarMedioPago("efectivo"));  // ya existe
         mostrar(controller.agregarMedioPago("   "));       // inválido
         mostrar(controller.agregarMedioPago("Tarjeta"));
 
-        MedioPago efectivo = buscar(controller, "Efectivo");
-        MedioPago tarjeta = buscar(controller, "Tarjeta");
+        MedioPago efectivo = buscarMedio(controller, "Efectivo");
+        MedioPago tarjeta = buscarMedio(controller, "Tarjeta");
 
         mostrar(controller.modificarMedioPago(tarjeta.getId(), "Tarjeta de crédito"));
 
@@ -27,21 +41,34 @@ public class Main {
             System.out.println("No se pudo agregar el límite: " + e.getMessage());
         }
 
-        mostrar(controller.ingresarDatosConsumo(20000, LocalDate.now(), "Super", 1, comida, efectivo));    // 20000/30000 verde
-        mostrar(controller.ingresarDatosConsumo(5000, LocalDate.now(), "Cena", 1, comida, efectivo));      // 25000/30000 amarillo
-        mostrar(controller.ingresarDatosConsumo(4000, LocalDate.now(), "Delivery", 1, comida, efectivo));  // 29000/30000 rojo
-        mostrar(controller.ingresarDatosConsumo(100, LocalDate.now(), "Sin medio", 1, comida, null));      // inválido
+        mostrar(controller.ingresarDatosConsumo(20000, LocalDate.now(), "Super", 1, alimentos, efectivo));    // verde
+        mostrar(controller.ingresarDatosConsumo(5000, LocalDate.now(), "Cena", 1, alimentos, efectivo));      // amarillo
+        mostrar(controller.ingresarDatosConsumo(4000, LocalDate.now(), "Delivery", 1, alimentos, efectivo));  // rojo
+        mostrar(controller.ingresarDatosConsumo(100, LocalDate.now(), "Sin medio", 1, alimentos, null));      // inválido
+        mostrar(controller.ingresarDatosConsumo(100, LocalDate.now(), "Sin categoría", 1, null, efectivo));   // inválido
 
-        // ---- CU8: eliminar ----
-        mostrar(controller.eliminarMedioPago(efectivo.getId()));  // tiene consumos -> no se puede
-        mostrar(controller.eliminarMedioPago(tarjeta.getId()));   // sin consumos -> se elimina
+        // ---- Eliminar ----
+        mostrar(controller.eliminarCategoria(alimentos.getId()));   // tiene consumos -> no se puede
+        mostrar(controller.eliminarCategoria(transporte.getId()));  // sin consumos -> se elimina
+        mostrar(controller.eliminarMedioPago(efectivo.getId()));    // tiene consumos -> no se puede
+        mostrar(controller.eliminarMedioPago(tarjeta.getId()));     // sin consumos -> se elimina
+
+        System.out.println("Categorías: " + controller.obtenerCategorias());
+        System.out.println("Medios de pago: " + controller.obtenerMediosPago());
     }
 
-    private static void mostrar(java.util.List<String> mensajes) {
+    private static void mostrar(List<String> mensajes) {
         for (String m : mensajes) System.out.println(m);
     }
 
-    private static MedioPago buscar(Controller controller, String nombre) {
+    private static Categoria buscarCategoria(Controller controller, String nombre) {
+        for (Categoria c : controller.obtenerCategorias()) {
+            if (c.getNombre().equalsIgnoreCase(nombre)) return c;
+        }
+        throw new IllegalStateException("No se encontró la categoría " + nombre);
+    }
+
+    private static MedioPago buscarMedio(Controller controller, String nombre) {
         for (MedioPago m : controller.obtenerMediosPago()) {
             if (m.getNombre().equalsIgnoreCase(nombre)) return m;
         }

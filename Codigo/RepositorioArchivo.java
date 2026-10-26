@@ -15,16 +15,18 @@ import java.util.Map;
 
 public class RepositorioArchivo implements Repositorio {
     private static final String SEP = ";";
-    private final Path archivo;        // consumos
-    private final Path archivoMedios;  // medios de pago
+    private final Path archivo;            // consumos
+    private final Path archivoMedios;      // medios de pago
+    private final Path archivoCategorias;  // categorías
 
-    public RepositorioArchivo(String rutaConsumos, String rutaMedios) {
+    public RepositorioArchivo(String rutaConsumos, String rutaMedios, String rutaCategorias) {
         this.archivo = Paths.get(rutaConsumos);
         this.archivoMedios = Paths.get(rutaMedios);
+        this.archivoCategorias = Paths.get(rutaCategorias);
     }
 
     public RepositorioArchivo() {
-        this("consumos.csv", "medios.csv");
+        this("consumos.csv", "medios.csv", "categorias.csv");
     }
 
     // ===================== CONSUMOS =====================
@@ -32,13 +34,7 @@ public class RepositorioArchivo implements Repositorio {
     @Override
     public void guardar(Consumo c) {
         c.setId(siguienteId());
-        try (BufferedWriter w = Files.newBufferedWriter(archivo, StandardCharsets.UTF_8,
-                StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
-            w.write(aLinea(c));
-            w.newLine();
-        } catch (IOException e) {
-            throw new RuntimeException("No se pudo guardar el consumo en " + archivo, e);
-        }
+        agregarLinea(archivo, aLinea(c), "el consumo");
     }
 
     @Override
@@ -46,12 +42,13 @@ public class RepositorioArchivo implements Repositorio {
         List<Consumo> consumos = new ArrayList<>();
         if (!Files.exists(archivo)) return consumos;
 
-        // Se cargan los medios una sola vez para mostrar siempre el nombre actualizado
+        // Se cargan una sola vez para mostrar siempre los nombres actualizados
         Map<Integer, MedioPago> medios = mediosPorId();
+        Map<Integer, Categoria> categorias = categoriasPorId();
         try {
             for (String linea : Files.readAllLines(archivo, StandardCharsets.UTF_8)) {
                 if (linea.isBlank()) continue;
-                consumos.add(deLinea(linea, medios));
+                consumos.add(deLinea(linea, medios, categorias));
             }
         } catch (IOException e) {
             throw new RuntimeException("No se pudo leer " + archivo, e);
@@ -82,11 +79,12 @@ public class RepositorioArchivo implements Repositorio {
     }
 
     // línea del CSV -> Consumo
-    private Consumo deLinea(String linea, Map<Integer, MedioPago> medios) {
+    private Consumo deLinea(String linea, Map<Integer, MedioPago> medios, Map<Integer, Categoria> categorias) {
         String[] p = linea.split(SEP, -1);
-        Categoria categoria = new Categoria(Integer.parseInt(p[5]), p[6]);
+        int idCategoria = Integer.parseInt(p[5]);
         int idMedio = Integer.parseInt(p[7]);
-        // si el medio existe en medios.csv se usa ese (nombre actual); si no, el guardado en la línea
+        // si existe en su archivo se usa ese (nombre actual); si no, el guardado en la línea
+        Categoria categoria = categorias.getOrDefault(idCategoria, new Categoria(idCategoria, p[6]));
         MedioPago medio = medios.getOrDefault(idMedio, new MedioPago(idMedio, p[8]));
         return new Consumo(Integer.parseInt(p[0]), Double.parseDouble(p[1]), LocalDate.parse(p[2]),
                 p[3], Integer.parseInt(p[4]), categoria, medio);
@@ -97,28 +95,15 @@ public class RepositorioArchivo implements Repositorio {
     @Override
     public void guardarMedioPago(MedioPago m) {
         m.setId(siguienteIdMedio());
-        try (BufferedWriter w = Files.newBufferedWriter(archivoMedios, StandardCharsets.UTF_8,
-                StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
-            w.write(medioALinea(m));
-            w.newLine();
-        } catch (IOException e) {
-            throw new RuntimeException("No se pudo guardar el medio de pago en " + archivoMedios, e);
-        }
+        agregarLinea(archivoMedios, medioALinea(m), "el medio de pago");
     }
 
     @Override
     public List<MedioPago> listarMediosPago() {
         List<MedioPago> medios = new ArrayList<>();
-        if (!Files.exists(archivoMedios)) return medios;
-
-        try {
-            for (String linea : Files.readAllLines(archivoMedios, StandardCharsets.UTF_8)) {
-                if (linea.isBlank()) continue;
-                String[] p = linea.split(SEP, -1);
-                medios.add(new MedioPago(Integer.parseInt(p[0]), p[1]));
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("No se pudo leer " + archivoMedios, e);
+        for (String linea : leerLineas(archivoMedios)) {
+            String[] p = linea.split(SEP, -1);
+            medios.add(new MedioPago(Integer.parseInt(p[0]), p[1]));
         }
         return medios;
     }
@@ -163,11 +148,101 @@ public class RepositorioArchivo implements Repositorio {
     private void reescribirMedios(List<MedioPago> medios) {
         List<String> lineas = new ArrayList<>();
         for (MedioPago m : medios) lineas.add(medioALinea(m));
+        escribirLineas(archivoMedios, lineas);
+    }
+
+    // ===================== CATEGORÍAS =====================
+
+    @Override
+    public void guardarCategoria(Categoria c) {
+        c.setId(siguienteIdCategoria());
+        agregarLinea(archivoCategorias, categoriaALinea(c), "la categoría");
+    }
+
+    @Override
+    public List<Categoria> listarCategorias() {
+        List<Categoria> categorias = new ArrayList<>();
+        for (String linea : leerLineas(archivoCategorias)) {
+            String[] p = linea.split(SEP, -1);
+            categorias.add(new Categoria(Integer.parseInt(p[0]), p[1]));
+        }
+        return categorias;
+    }
+
+    @Override
+    public void actualizarCategoria(Categoria c) {
+        List<Categoria> categorias = listarCategorias();
+        for (int i = 0; i < categorias.size(); i++) {
+            if (categorias.get(i).getId() == c.getId()) {
+                categorias.set(i, c);
+                break;
+            }
+        }
+        reescribirCategorias(categorias);
+    }
+
+    @Override
+    public void eliminarCategoria(int id) {
+        List<Categoria> categorias = listarCategorias();
+        categorias.removeIf(c -> c.getId() == id);
+        reescribirCategorias(categorias);
+    }
+
+    private int siguienteIdCategoria() {
+        int max = 0;
+        for (Categoria c : listarCategorias()) {
+            if (c.getId() > max) max = c.getId();
+        }
+        return max + 1;
+    }
+
+    private Map<Integer, Categoria> categoriasPorId() {
+        Map<Integer, Categoria> mapa = new HashMap<>();
+        for (Categoria c : listarCategorias()) mapa.put(c.getId(), c);
+        return mapa;
+    }
+
+    private String categoriaALinea(Categoria c) {
+        return String.join(SEP, String.valueOf(c.getId()), limpiar(c.getNombre()));
+    }
+
+    private void reescribirCategorias(List<Categoria> categorias) {
+        List<String> lineas = new ArrayList<>();
+        for (Categoria c : categorias) lineas.add(categoriaALinea(c));
+        escribirLineas(archivoCategorias, lineas);
+    }
+
+    // ===================== AUXILIARES =====================
+
+    private List<String> leerLineas(Path ruta) {
+        List<String> lineas = new ArrayList<>();
+        if (!Files.exists(ruta)) return lineas;
         try {
-            Files.write(archivoMedios, lineas, StandardCharsets.UTF_8,
+            for (String linea : Files.readAllLines(ruta, StandardCharsets.UTF_8)) {
+                if (!linea.isBlank()) lineas.add(linea);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("No se pudo leer " + ruta, e);
+        }
+        return lineas;
+    }
+
+    private void agregarLinea(Path ruta, String linea, String que) {
+        try (BufferedWriter w = Files.newBufferedWriter(ruta, StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
+            w.write(linea);
+            w.newLine();
+        } catch (IOException e) {
+            throw new RuntimeException("No se pudo guardar " + que + " en " + ruta, e);
+        }
+    }
+
+    private void escribirLineas(Path ruta, List<String> lineas) {
+        try {
+            Files.write(ruta, lineas, StandardCharsets.UTF_8,
                     StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
-            throw new RuntimeException("No se pudo escribir " + archivoMedios, e);
+            throw new RuntimeException("No se pudo escribir " + ruta, e);
         }
     }
 

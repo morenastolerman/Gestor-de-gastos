@@ -13,5 +13,11 @@ public interface Repositorio {
     List<MedioPago> listarMediosPago();
     void actualizarMedioPago(MedioPago m);
     void eliminarMedioPago(int id);
+
+    // Categorías
+    void guardarCategoria(Categoria c);          // asigna el id a la categoría
+    List<Categoria> listarCategorias();
+    void actualizarCategoria(Categoria c);
+    void eliminarCategoria(int id);
 }
  

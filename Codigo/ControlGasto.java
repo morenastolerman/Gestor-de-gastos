@@ -52,6 +52,62 @@ public class ControlGasto {
         return total;
     }
 
+    // ===================== CU7: Gestionar categorías =====================
+ 
+    // true si la agregó; false si ya existía una con ese nombre
+    public boolean agregarCategoria(String nombre) {
+        if (existeNombreCategoria(nombre, -1)) {
+            return false;
+        }
+        repositorio.guardarCategoria(new Categoria(0, nombre));
+        return true;
+    }
+ 
+    public List<Categoria> getCategorias() {
+        return repositorio.listarCategorias();
+    }
+ 
+    // IllegalArgumentException si no existe; IllegalStateException si el nombre ya lo usa otra categoría
+    public void modificarCategoria(int id, String nuevoNombre) {
+        Categoria categoria = buscarCategoria(id);
+        if (existeNombreCategoria(nuevoNombre, id)) {
+            throw new IllegalStateException("Ya existe una categoría con ese nombre");
+        }
+        categoria.setNombre(nuevoNombre);
+        repositorio.actualizarCategoria(categoria);
+    }
+ 
+    // IllegalArgumentException si no existe; IllegalStateException si tiene consumos asociados
+    public void eliminarCategoria(int id) {
+        buscarCategoria(id);
+        int asociados = 0;
+        for (Consumo c : repositorio.listar()) {
+            if (c.getCategoria().getId() == id) asociados++;
+        }
+        if (asociados > 0) {
+            throw new IllegalStateException(
+                    "No se puede eliminar: la categoría tiene " + asociados + " consumo(s) asociado(s)");
+        }
+        repositorio.eliminarCategoria(id);
+    }
+ 
+    private Categoria buscarCategoria(int id) {
+        for (Categoria c : repositorio.listarCategorias()) {
+            if (c.getId() == id) return c;
+        }
+        throw new IllegalArgumentException("La categoría no existe");
+    }
+ 
+    // ignora la categoría cuyo id es idExcluido (para poder "modificar" sin chocar consigo misma)
+    private boolean existeNombreCategoria(String nombre, int idExcluido) {
+        for (Categoria c : repositorio.listarCategorias()) {
+            if (c.getId() != idExcluido && c.getNombre().equalsIgnoreCase(nombre)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     // ===================== CU8: Gestionar medios de pago =====================
 
     // true si lo agregó; false si ya existía uno con ese nombre

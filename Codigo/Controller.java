@@ -40,6 +40,50 @@ public class Controller {
         return mensajes;
     }
  
+    // ===================== CU7: Gestionar categorías =====================
+ 
+    public List<String> agregarCategoria(String nombre) {
+        List<String> mensajes = new ArrayList<>();
+        if (nombre == null || nombre.isBlank()) {
+            mensajes.add("Datos incorrectos o incompletos");
+        } else if (controlGasto.agregarCategoria(nombre.trim())) {
+            mensajes.add("Categoría agregada correctamente");
+        } else {
+            mensajes.add("La categoría ya existe");
+        }
+        return mensajes;
+    }
+ 
+    public List<String> modificarCategoria(int id, String nuevoNombre) {
+        List<String> mensajes = new ArrayList<>();
+        if (nuevoNombre == null || nuevoNombre.isBlank()) {
+            mensajes.add("Datos incorrectos o incompletos");
+            return mensajes;
+        }
+        try {
+            controlGasto.modificarCategoria(id, nuevoNombre.trim());
+            mensajes.add("Categoría modificada correctamente");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            mensajes.add(e.getMessage());
+        }
+        return mensajes;
+    }
+ 
+    public List<String> eliminarCategoria(int id) {
+        List<String> mensajes = new ArrayList<>();
+        try {
+            controlGasto.eliminarCategoria(id);
+            mensajes.add("Categoría eliminada correctamente");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            mensajes.add(e.getMessage());
+        }
+        return mensajes;
+    }
+ 
+    public List<Categoria> obtenerCategorias() {
+        return controlGasto.getCategorias();
+    }
+    
     // ===================== CU8 =====================
  
     public List<String> agregarMedioPago(String nombre) {
