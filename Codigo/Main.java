@@ -1,6 +1,7 @@
 package Codigo;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 public class Main {
@@ -17,6 +18,7 @@ public class Main {
         mostrar(controller.agregarCategoria("Ocio"));
 
         Categoria alimentos = buscarCategoria(controller, "Alimentos");
+        Categoria alquiler = buscarCategoria(controller, "Alquiler");
         Categoria ocio = buscarCategoria(controller, "Ocio");
         Categoria transporte = buscarCategoria(controller, "Transporte");
 
@@ -46,6 +48,34 @@ public class Main {
         mostrar(controller.ingresarDatosConsumo(4000, LocalDate.now(), "Delivery", 1, alimentos, efectivo));  // rojo
         mostrar(controller.ingresarDatosConsumo(100, LocalDate.now(), "Sin medio", 1, alimentos, null));      // inválido
         mostrar(controller.ingresarDatosConsumo(100, LocalDate.now(), "Sin categoría", 1, null, efectivo));   // inválido
+
+        // Consumos de agosto para probar CU9 y CU10 (el límite es del mes actual, no les aplica)
+        YearMonth agosto = YearMonth.of(2026, 8);
+        controller.ingresarDatosConsumo(150000, agosto.atDay(1), "Alquiler agosto", 1, alquiler, efectivo);
+        controller.ingresarDatosConsumo(12000, agosto.atDay(5), "Supermercado", 1, alimentos, efectivo);
+        controller.ingresarDatosConsumo(8000, agosto.atDay(18), "Verdulería", 1, alimentos, efectivo);
+        controller.ingresarDatosConsumo(6000, agosto.atDay(22), "Cine", 2, ocio, efectivo);
+
+        // ---- CU9: consultar consumos ----
+        System.out.println("\n--- Consumos de agosto ---");
+        mostrar(controller.consultarConsumos(agosto.atDay(1), agosto.atEndOfMonth(), null));
+
+        System.out.println("\n--- Consumos de Alimentos (todas las fechas) ---");
+        mostrar(controller.consultarConsumos(null, null, alimentos));
+
+        System.out.println("\n--- Consumos de Alimentos en agosto ---");
+        mostrar(controller.consultarConsumos(agosto.atDay(1), agosto.atEndOfMonth(), alimentos));
+
+        System.out.println("\n--- Rango invertido ---");
+        mostrar(controller.consultarConsumos(agosto.atEndOfMonth(), agosto.atDay(1), null));
+
+        System.out.println("\n--- Sin resultados ---");
+        mostrar(controller.consultarConsumos(agosto.atDay(1), agosto.atEndOfMonth(), transporte));
+
+        // ---- CU10: reporte de gastos del período ----
+        System.out.println();
+        System.out.println(controller.generarReporteGastosMensual(agosto));
+        System.out.println(controller.generarReporteGastosMensual(YearMonth.of(2020, 1)));  // sin consumos
 
         // ---- Eliminar ----
         mostrar(controller.eliminarCategoria(alimentos.getId()));   // tiene consumos -> no se puede

@@ -1,6 +1,7 @@
 package Codigo;
  
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
  
@@ -126,6 +127,61 @@ public class Controller {
  
     public List<MedioPago> obtenerMediosPago() {
         return controlGasto.getMediosPago();
+    }
+
+
+    // ===================== CU9: Consultar consumos =====================
+ 
+    // desde/hasta: ambos o ninguno. categoria: null = todas.
+    public List<String> consultarConsumos(LocalDate desde, LocalDate hasta, Categoria categoria) {
+        List<String> mensajes = new ArrayList<>();
+        if ((desde == null) != (hasta == null)) {
+            mensajes.add("Datos incorrectos o incompletos");
+            return mensajes;
+        }
+ 
+        List<Criterio> criterios = new ArrayList<>();
+        try {
+            if (desde != null) criterios.add(new CriterioRangoFechas(desde, hasta));
+        } catch (IllegalArgumentException e) {
+            mensajes.add(e.getMessage());
+            return mensajes;
+        }
+        if (categoria != null) criterios.add(new CriterioCategoria(categoria));
+ 
+        List<Consumo> consumos = controlGasto.consultarConsumos(criterios);
+        if (consumos.isEmpty()) {
+            mensajes.add("No se encontraron consumos");
+            return mensajes;
+        }
+ 
+        double total = 0;
+        for (Consumo c : consumos) {
+            total += c.getMonto();
+            String cuotas = c.getCuotas() > 1 ? " (" + c.getCuotas() + " cuotas)" : "";
+            mensajes.add(String.format("%s | %s | %s | %s | %.2f%s",
+                    c.getFecha(), c.getDescripcion(), c.getCategoria().getNombre(),
+                    c.getMedioDePago().getNombre(), c.getMonto(), cuotas));
+        }
+        mensajes.add(String.format("Total: %.2f (%d consumo(s))", total, consumos.size()));
+        return mensajes;
+    }
+ 
+    // ===================== CU10: Reporte de gastos del período =====================
+ 
+    // Devuelve el reporte listo para mostrar, o el mensaje de error si el rango es inválido
+    public String generarReporteGastos(LocalDate desde, LocalDate hasta) {
+        try {
+            return controlGasto.generarReporte(new ReporteGastosPeriodo(), desde, hasta);
+        } catch (IllegalArgumentException e) {
+            return e.getMessage();
+        }
+    }
+ 
+    // Atajo para "en el mes de agosto": el período es el mes completo
+    public String generarReporteGastosMensual(YearMonth mes) {
+        if (mes == null) return "Datos incorrectos o incompletos";
+        return generarReporteGastos(mes.atDay(1), mes.atEndOfMonth());
     }
 }
  

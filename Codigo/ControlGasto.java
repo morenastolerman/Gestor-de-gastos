@@ -1,6 +1,8 @@
 package Codigo;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class ControlGasto {
@@ -163,4 +165,37 @@ public class ControlGasto {
         }
         return false;
     }
+
+    // ===================== CU9: Consultar consumos =====================
+ 
+    // Devuelve los consumos que cumplen TODOS los criterios, ordenados por fecha.
+    // Lista de criterios vacía -> devuelve todos los consumos.
+    public List<Consumo> consultarConsumos(List<Criterio> criterios) {
+        List<Consumo> resultado = new ArrayList<>();
+        for (Consumo c : repositorio.listar()) {
+            if (cumpleTodos(c, criterios)) resultado.add(c);
+        }
+        resultado.sort(Comparator.comparing(Consumo::getFecha));
+        return resultado;
+    }
+ 
+    private boolean cumpleTodos(Consumo c, List<Criterio> criterios) {
+        for (Criterio k : criterios) {
+            if (!k.cumple(c)) return false;
+        }
+        return true;
+    }
+ 
+    // ===================== CU10: Reporte de gastos del período =====================
+ 
+    // Filtra los consumos por rango de fechas y se los pasa al reporte.
+    // IllegalArgumentException si las fechas son inválidas.
+    public String generarReporte(Reporte reporte, LocalDate desde, LocalDate hasta) {
+        List<Criterio> criterios = new ArrayList<>();
+        criterios.add(new CriterioRangoFechas(desde, hasta));
+        return reporte.generar(consultarConsumos(criterios), desde, hasta);
+    }
+    
+
+    
 }
