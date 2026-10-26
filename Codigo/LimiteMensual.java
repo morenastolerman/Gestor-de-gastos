@@ -5,21 +5,19 @@ import java.time.YearMonth;
 
 public class LimiteMensual extends Limite {
 
-    public LimiteMensual(int monto, LocalDate fechaInicio) {
-        super(monto,fechaInicio);
+    public LimiteMensual(double monto, LocalDate fechaReferencia) {
+        super(monto, fechaReferencia);
     }
 
     @Override
     public boolean aplica(Consumo c) {
-        return c.getFecha().getMonth() == this.fechaInicio.getMonth() &&
-               c.getFecha().getYear() == this.fechaInicio.getYear();
+        return YearMonth.from(c.getFecha()).equals(YearMonth.from(this.fechaReferencia));
     }
-    
+
     @Override
     public boolean mismoPeriodo(Limite otro) {
         if (!(otro instanceof LimiteMensual)) return false;
-        return YearMonth.from(this.fechaInicio)
-                .equals(YearMonth.from(((LimiteMensual) otro).fechaInicio));
+        return YearMonth.from(this.fechaReferencia)
+                .equals(YearMonth.from(((LimiteMensual) otro).fechaReferencia));
     }
-    
 }

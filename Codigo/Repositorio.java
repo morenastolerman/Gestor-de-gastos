@@ -1,15 +1,17 @@
 package Codigo;
-
+ 
 import java.util.List;
-
+ 
 public interface Repositorio {
-    
-    public void guardar(Consumo c);
-    public List<Consumo> listar();
-//----------------------------------------------------
-   /* public void guardarCategoria(Categoria c);
-    public List<Categoria> listarCategorias();
-    public void actualizarCategoria(Categoria c);
-    public void eliminarCategoria(int id);*/
-    
+ 
+    // Consumos
+    void guardar(Consumo c);
+    List<Consumo> listar();
+ 
+    // Medios de pago
+    void guardarMedioPago(MedioPago m);          // asigna el id al medio
+    List<MedioPago> listarMediosPago();
+    void actualizarMedioPago(MedioPago m);
+    void eliminarMedioPago(int id);
 }
+ 

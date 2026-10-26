@@ -2,16 +2,16 @@ package Codigo;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Collections;
 
 public class ControlGasto {
     private Repositorio repositorio;
     private List<Limite> limites = new ArrayList<>();
 
-    
     public ControlGasto(Repositorio repositorio) {
         this.repositorio = repositorio;
     }
+
+    // ===================== CU1: Generar y alertar consumo =====================
 
     public void agregarLimite(Limite l) {
         if (l == null)
@@ -23,19 +23,21 @@ public class ControlGasto {
         limites.add(l);
     }
 
-
-   public List<String> registrar(Consumo c) {
+    public List<String> registrar(Consumo c) {
         repositorio.guardar(c);
         List<String> alertas = new ArrayList<>();
 
         for (Limite l : limites) {
             if (!l.aplica(c)) continue; // solo los límites que corresponden a este consumo
 
-            Semaforo estado = l.estado(calcularGastado(l));
+            double gastado = calcularGastado(l);
+            Semaforo estado = l.estado(gastado);
+            String detalle = String.format(" - gastaste %.2f de %.2f", gastado, l.getMonto());
+
             if (estado == Semaforo.ROJO) {
-                alertas.add("ALERTA: Límite excedido (ROJO)");
+                alertas.add("ALERTA: Límite excedido (ROJO)" + detalle);
             } else if (estado == Semaforo.AMARILLO) {
-                alertas.add("ADVERTENCIA: Cerca del límite (AMARILLO)");
+                alertas.add("ADVERTENCIA: Cerca del límite (AMARILLO)" + detalle);
             }
         }
         return alertas;
@@ -49,23 +51,60 @@ public class ControlGasto {
         }
         return total;
     }
-    //------------------------------------------------------------------
-    private List<MedioPago> mediosPago = new ArrayList<>();
-    private int proximoIdMedio = 1;
+
+    // ===================== CU8: Gestionar medios de pago =====================
 
     // true si lo agregó; false si ya existía uno con ese nombre
     public boolean agregarMedioPago(String nombre) {
-        for (MedioPago m : mediosPago) {
-            if (m.getNombre().equalsIgnoreCase(nombre)) {
-                return false;
-            }
+        if (existeNombre(nombre, -1)) {
+            return false;
         }
-        mediosPago.add(new MedioPago(proximoIdMedio++, nombre));
+        repositorio.guardarMedioPago(new MedioPago(0, nombre));
         return true;
     }
 
     public List<MedioPago> getMediosPago() {
-        return Collections.unmodifiableList(mediosPago);
+        return repositorio.listarMediosPago();
     }
 
+    // IllegalArgumentException si no existe; IllegalStateException si el nombre ya lo usa otro medio
+    public void modificarMedioPago(int id, String nuevoNombre) {
+        MedioPago medio = buscarMedio(id);
+        if (existeNombre(nuevoNombre, id)) {
+            throw new IllegalStateException("Ya existe un medio de pago con ese nombre");
+        }
+        medio.setNombre(nuevoNombre);
+        repositorio.actualizarMedioPago(medio);
+    }
+
+    // IllegalArgumentException si no existe; IllegalStateException si tiene consumos asociados
+    public void eliminarMedioPago(int id) {
+        buscarMedio(id);
+        int asociados = 0;
+        for (Consumo c : repositorio.listar()) {
+            if (c.getMedioDePago().getId() == id) asociados++;
+        }
+        if (asociados > 0) {
+            throw new IllegalStateException(
+                    "No se puede eliminar: el medio de pago tiene " + asociados + " consumo(s) asociado(s)");
+        }
+        repositorio.eliminarMedioPago(id);
+    }
+
+    private MedioPago buscarMedio(int id) {
+        for (MedioPago m : repositorio.listarMediosPago()) {
+            if (m.getId() == id) return m;
+        }
+        throw new IllegalArgumentException("El medio de pago no existe");
+    }
+
+    // ignora el medio cuyo id es idExcluido (para poder "modificar" sin chocar consigo mismo)
+    private boolean existeNombre(String nombre, int idExcluido) {
+        for (MedioPago m : repositorio.listarMediosPago()) {
+            if (m.getId() != idExcluido && m.getNombre().equalsIgnoreCase(nombre)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
