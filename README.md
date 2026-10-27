@@ -120,7 +120,7 @@ El sistema contempla doce casos de uso principales, organizados en cinco módulo
 - **Módulo 5: Persistencia y archivos:** CU11.
 - **Caso de uso extendido:** CU12, validación y notificación de alertas de exceso.
 
-*Insertar aquí el diagrama de casos de uso.*
+![Diagrama de casos de uso del Sistema de Control de Gastos](diagramas/casos_de_uso.png)
 
 ### P4. Requerimientos no funcionales
 
