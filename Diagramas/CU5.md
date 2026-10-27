@@ -1,29 +1,42 @@
-# CU5 – Definir límite
+## CU5 – Definir límite
 
 ```mermaid
 sequenceDiagram
     actor Usuario
-    participant Vista
-    participant Controller
-    participant ControlGasto
-    participant LimiteMensual
+    participant V as Vista
+    participant C as Controller
+    participant CG as ControlGasto
+    participant E as existente : Limite
 
-    Usuario->>+Vista: definir límite (monto, mes)
-    Vista->>+LimiteMensual: crear (monto, primer día del mes)
-    LimiteMensual-->>-Vista: limite
-    Vista->>+Controller: agregarLimite(limite)
-    Controller->>+ControlGasto: agregarLimite(limite)
-    ControlGasto->>+LimiteMensual: mismoPeriodo(limite)
-    LimiteMensual-->>-ControlGasto: true o false
+    Usuario->>+V: elige "2. Definir límite mensual"
+    V->>V: leerDecimal("Monto del límite: ")
+    V->>V: leerMes("Mes del límite (MM/yyyy): ")
+    V->>+C: definirLimite(monto, mes)
 
-    alt ya existe un límite para ese período
-        ControlGasto-->>Controller: error, período ya definido
-    else período libre
-        Note over ControlGasto: agrega el límite a su lista
-        ControlGasto-->>Controller: ok
+    create participant L as l : LimiteMensual
+    C->>L: new LimiteMensual(monto, mes.atDay(1))
+
+    alt monto <= 0
+        L-->>C: IllegalArgumentException("El monto debe ser mayor a 0")
+        C->>C: mensajes.add("No se pudo agregar el límite: ...")
+    else monto válido
+        C->>+CG: agregarLimite(l)
+        loop para cada límite existente
+            CG->>+E: mismoPeriodo(l)
+            Note over E: Lo resuelve la subclase. LimiteMensual compara mes y año (polimorfismo)
+            E-->>-CG: true o false
+        end
+        alt ya existe un límite para ese mes
+            CG-->>C: IllegalStateException("Ya existe un límite para ese período")
+            C->>C: mensajes.add("No se pudo agregar el límite: ...")
+        else no existe
+            CG->>CG: limites.add(l)
+            CG-->>-C: listo
+            C->>C: mensajes.add("Límite agregado correctamente")
+        end
     end
-    deactivate ControlGasto
 
-    Controller-->>-Vista: mensaje
-    Vista-->>-Usuario: muestra el resultado
+    C-->>-V: mensajes
+    V->>V: mostrar(mensajes)
+    V-->>-Usuario: ve el resultado
 ```
