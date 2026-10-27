@@ -49,5 +49,3 @@ public class Categoria {
         return id + " - " + nombre;
     }
 }
-
-//hola
