@@ -1,3 +1,4 @@
+```mermaid
 sequenceDiagram
     autonumber
     actor U as Usuario
@@ -25,3 +26,4 @@ sequenceDiagram
     deactivate C
     V->>V: mostrarMensaje(mensajes)
     V-->>-U: muestra el resultado
+```
