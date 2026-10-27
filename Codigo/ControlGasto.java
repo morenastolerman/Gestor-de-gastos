@@ -13,7 +13,7 @@ public class ControlGasto {
         this.repositorio = repositorio;
     }
 
-    // ===================== CU1: Generar y alertar consumo =====================
+    // ===================== CU1: Registrar consumo y notificar =====================
 
     public void agregarLimite(Limite l) {
         if (l == null)
@@ -55,7 +55,7 @@ public class ControlGasto {
     }
 
     // ===================== CU7: Gestionar categorías =====================
- 
+
     // true si la agregó; false si ya existía una con ese nombre
     public boolean agregarCategoria(String nombre) {
         if (existeNombreCategoria(nombre, -1)) {
@@ -64,11 +64,11 @@ public class ControlGasto {
         repositorio.guardarCategoria(new Categoria(0, nombre));
         return true;
     }
- 
+
     public List<Categoria> getCategorias() {
         return repositorio.listarCategorias();
     }
- 
+
     // IllegalArgumentException si no existe; IllegalStateException si el nombre ya lo usa otra categoría
     public void modificarCategoria(int id, String nuevoNombre) {
         Categoria categoria = buscarCategoria(id);
@@ -78,7 +78,7 @@ public class ControlGasto {
         categoria.setNombre(nuevoNombre);
         repositorio.actualizarCategoria(categoria);
     }
- 
+
     // IllegalArgumentException si no existe; IllegalStateException si tiene consumos asociados
     public void eliminarCategoria(int id) {
         buscarCategoria(id);
@@ -92,14 +92,14 @@ public class ControlGasto {
         }
         repositorio.eliminarCategoria(id);
     }
- 
+
     private Categoria buscarCategoria(int id) {
         for (Categoria c : repositorio.listarCategorias()) {
             if (c.getId() == id) return c;
         }
         throw new IllegalArgumentException("La categoría no existe");
     }
- 
+
     // ignora la categoría cuyo id es idExcluido (para poder "modificar" sin chocar consigo misma)
     private boolean existeNombreCategoria(String nombre, int idExcluido) {
         for (Categoria c : repositorio.listarCategorias()) {
@@ -109,7 +109,7 @@ public class ControlGasto {
         }
         return false;
     }
-    
+
     // ===================== CU8: Gestionar medios de pago =====================
 
     // true si lo agregó; false si ya existía uno con ese nombre
@@ -166,8 +166,8 @@ public class ControlGasto {
         return false;
     }
 
-    // ===================== CU9: Consultar consumos =====================
- 
+    // ===================== COMPARTIDO CU9 y CU10: consulta y reportes =====================
+
     // Devuelve los consumos que cumplen TODOS los criterios, ordenados por fecha.
     // Lista de criterios vacía -> devuelve todos los consumos.
     public List<Consumo> consultarConsumos(List<Criterio> criterios) {
@@ -178,24 +178,20 @@ public class ControlGasto {
         resultado.sort(Comparator.comparing(Consumo::getFecha));
         return resultado;
     }
- 
+
     private boolean cumpleTodos(Consumo c, List<Criterio> criterios) {
         for (Criterio k : criterios) {
             if (!k.cumple(c)) return false;
         }
         return true;
     }
- 
-    // ===================== CU10: Reporte de gastos del período =====================
- 
-    // Filtra los consumos por rango de fechas y se los pasa al reporte.
+
+    // Filtra los consumos por rango de fechas y se los pasa al reporte
+    // (ReporteEstadistico en CU9, ReporteGastosPeriodo en CU10).
     // IllegalArgumentException si las fechas son inválidas.
     public String generarReporte(Reporte reporte, LocalDate desde, LocalDate hasta) {
         List<Criterio> criterios = new ArrayList<>();
         criterios.add(new CriterioRangoFechas(desde, hasta));
         return reporte.generar(consultarConsumos(criterios), desde, hasta);
     }
-    
-
-    
 }

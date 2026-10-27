@@ -29,7 +29,8 @@ public class RepositorioArchivo implements Repositorio {
         this("consumos.csv", "medios.csv", "categorias.csv");
     }
 
-    // ===================== CONSUMOS =====================
+    // ===================== CU1: Registrar consumo y notificar =====================
+    // (listar() también lo usan CU7, CU8, CU9 y CU10)
 
     @Override
     public void guardar(Consumo c) {
@@ -90,68 +91,7 @@ public class RepositorioArchivo implements Repositorio {
                 p[3], Integer.parseInt(p[4]), categoria, medio);
     }
 
-    // ===================== MEDIOS DE PAGO =====================
-
-    @Override
-    public void guardarMedioPago(MedioPago m) {
-        m.setId(siguienteIdMedio());
-        agregarLinea(archivoMedios, medioALinea(m), "el medio de pago");
-    }
-
-    @Override
-    public List<MedioPago> listarMediosPago() {
-        List<MedioPago> medios = new ArrayList<>();
-        for (String linea : leerLineas(archivoMedios)) {
-            String[] p = linea.split(SEP, -1);
-            medios.add(new MedioPago(Integer.parseInt(p[0]), p[1]));
-        }
-        return medios;
-    }
-
-    @Override
-    public void actualizarMedioPago(MedioPago m) {
-        List<MedioPago> medios = listarMediosPago();
-        for (int i = 0; i < medios.size(); i++) {
-            if (medios.get(i).getId() == m.getId()) {
-                medios.set(i, m);
-                break;
-            }
-        }
-        reescribirMedios(medios);
-    }
-
-    @Override
-    public void eliminarMedioPago(int id) {
-        List<MedioPago> medios = listarMediosPago();
-        medios.removeIf(m -> m.getId() == id);
-        reescribirMedios(medios);
-    }
-
-    private int siguienteIdMedio() {
-        int max = 0;
-        for (MedioPago m : listarMediosPago()) {
-            if (m.getId() > max) max = m.getId();
-        }
-        return max + 1;
-    }
-
-    private Map<Integer, MedioPago> mediosPorId() {
-        Map<Integer, MedioPago> mapa = new HashMap<>();
-        for (MedioPago m : listarMediosPago()) mapa.put(m.getId(), m);
-        return mapa;
-    }
-
-    private String medioALinea(MedioPago m) {
-        return String.join(SEP, String.valueOf(m.getId()), limpiar(m.getNombre()));
-    }
-
-    private void reescribirMedios(List<MedioPago> medios) {
-        List<String> lineas = new ArrayList<>();
-        for (MedioPago m : medios) lineas.add(medioALinea(m));
-        escribirLineas(archivoMedios, lineas);
-    }
-
-    // ===================== CATEGORÍAS =====================
+    // ===================== CU7: Gestionar categorías =====================
 
     @Override
     public void guardarCategoria(Categoria c) {
@@ -212,7 +152,68 @@ public class RepositorioArchivo implements Repositorio {
         escribirLineas(archivoCategorias, lineas);
     }
 
-    // ===================== AUXILIARES =====================
+    // ===================== CU8: Gestionar medios de pago =====================
+
+    @Override
+    public void guardarMedioPago(MedioPago m) {
+        m.setId(siguienteIdMedio());
+        agregarLinea(archivoMedios, medioALinea(m), "el medio de pago");
+    }
+
+    @Override
+    public List<MedioPago> listarMediosPago() {
+        List<MedioPago> medios = new ArrayList<>();
+        for (String linea : leerLineas(archivoMedios)) {
+            String[] p = linea.split(SEP, -1);
+            medios.add(new MedioPago(Integer.parseInt(p[0]), p[1]));
+        }
+        return medios;
+    }
+
+    @Override
+    public void actualizarMedioPago(MedioPago m) {
+        List<MedioPago> medios = listarMediosPago();
+        for (int i = 0; i < medios.size(); i++) {
+            if (medios.get(i).getId() == m.getId()) {
+                medios.set(i, m);
+                break;
+            }
+        }
+        reescribirMedios(medios);
+    }
+
+    @Override
+    public void eliminarMedioPago(int id) {
+        List<MedioPago> medios = listarMediosPago();
+        medios.removeIf(m -> m.getId() == id);
+        reescribirMedios(medios);
+    }
+
+    private int siguienteIdMedio() {
+        int max = 0;
+        for (MedioPago m : listarMediosPago()) {
+            if (m.getId() > max) max = m.getId();
+        }
+        return max + 1;
+    }
+
+    private Map<Integer, MedioPago> mediosPorId() {
+        Map<Integer, MedioPago> mapa = new HashMap<>();
+        for (MedioPago m : listarMediosPago()) mapa.put(m.getId(), m);
+        return mapa;
+    }
+
+    private String medioALinea(MedioPago m) {
+        return String.join(SEP, String.valueOf(m.getId()), limpiar(m.getNombre()));
+    }
+
+    private void reescribirMedios(List<MedioPago> medios) {
+        List<String> lineas = new ArrayList<>();
+        for (MedioPago m : medios) lineas.add(medioALinea(m));
+        escribirLineas(archivoMedios, lineas);
+    }
+
+    // ===================== AUXILIARES (usados por todos los CU) =====================
 
     private List<String> leerLineas(Path ruta) {
         List<String> lineas = new ArrayList<>();

@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// CU10: cuánto se gastó en el período y en qué (desglose por categoría)
+// CU9: Consultar reporte estadístico (cuánto se gastó en el período y en qué, desglose por categoría)
 public class ReporteEstadistico implements Reporte {
     private static final DateTimeFormatter FORMATO = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
