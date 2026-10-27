@@ -1,37 +1,29 @@
-``` mermaid
+# CU5 – Definir límite
+
+```mermaid
 sequenceDiagram
     actor Usuario
-    participant V as Vista
-    participant C as Controller
-    participant CG as ControlGasto
-    participant LM as LimiteMensual
+    participant Vista
+    participant Controller
+    participant ControlGasto
+    participant LimiteMensual
 
-    Usuario->>+V: definirLimite(monto, mes, anio, umbral)
-    V->>+C: agregarLimite(monto, mes, anio, umbral)
+    Usuario->>+Vista: definir límite (monto, mes)
+    Vista->>+LimiteMensual: crear (monto, primer día del mes)
+    LimiteMensual-->>-Vista: limite
+    Vista->>+Controller: agregarLimite(limite)
+    Controller->>+ControlGasto: agregarLimite(limite)
+    ControlGasto->>+LimiteMensual: mismoPeriodo(limite)
+    LimiteMensual-->>-ControlGasto: true o false
 
-    C->>C: validarDatos(monto, mes, anio, umbral)
-
-    alt datos invalidos
-        C->>C: armar lista de errores
-    else datos validos
-        C->>C: calcular fechaInicio (primer dia del mes)
-        C->>+CG: definirOModificarLimite(monto, fechaInicio, umbral)
-
-        CG->>CG: buscarLimite(fechaInicio)
-
-        alt ya existe limite mensual para ese mes (modificar)
-            CG->>+LM: actualizar(monto, umbral)
-            LM-->>-CG: limite actualizado
-        else no existe limite para ese mes (definir)
-            CG->>CG: new LimiteMensual(monto, fechaInicio, umbral)
-            CG->>CG: agregar limite a la lista de limites
-        end
-
-        CG-->>-C: listo
+    alt ya existe un límite para ese período
+        ControlGasto-->>Controller: error, período ya definido
+    else período libre
+        Note over ControlGasto: agrega el límite a su lista
+        ControlGasto-->>Controller: ok
     end
+    deactivate ControlGasto
 
-    C-->>-V: lista de errores (vacia si salio bien)
-    V->>V: mostrarMensaje(mensajes)
-    V-->>-Usuario: muestra el resultado
-
+    Controller-->>-Vista: mensaje
+    Vista-->>-Usuario: muestra el resultado
 ```
