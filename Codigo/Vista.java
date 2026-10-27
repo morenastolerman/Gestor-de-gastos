@@ -48,15 +48,10 @@ public class Vista {
 
     // ===================== CU1: Registrar consumo y notificar =====================
 
-    private void definirLimite() {
+   private void definirLimite() {
         double monto = leerDecimal("Monto del límite: ");
         YearMonth mes = leerMes("Mes del límite (MM/yyyy): ");
-        try {
-            controller.agregarLimite(new LimiteMensual(monto, mes.atDay(1)));
-            System.out.println("Límite agregado correctamente");
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            System.out.println("No se pudo agregar el límite: " + e.getMessage());
-        }
+        mostrar(controller.definirLimite(monto, mes));
     }
 
     private void registrarConsumo() {
