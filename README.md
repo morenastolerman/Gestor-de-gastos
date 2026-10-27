@@ -2,10 +2,6 @@
 
 ## Documentación de Análisis
 
-# Gestor de Gastos
-
-## Documentación de Análisis
-
 ### P1. Objetivo y alcance
 
 El objetivo del Sistema de Control de Gastos es permitir que el usuario registre y administre sus gastos personales, controle sus presupuestos y analice sus hábitos de consumo, facilitando la organización de sus finanzas.
