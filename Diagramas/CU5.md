@@ -29,7 +29,9 @@ sequenceDiagram
 
         CG-->>-C: listo
     end
-```
+
     C-->>-V: lista de errores (vacia si salio bien)
     V->>V: mostrarMensaje(mensajes)
     V-->>-Usuario: muestra el resultado
+
+```
