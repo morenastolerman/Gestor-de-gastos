@@ -9,9 +9,7 @@ classDiagram
     direction TB
 
     %% ===================== PRESENTACIÓN =====================
-    class Main {
-        +main(String[] args)$ void
-    }
+    
 
     class Vista {
         -DateTimeFormatter FECHA$
@@ -263,9 +261,7 @@ classDiagram
     Repositorio <|.. RepositorioArchivo
 
     %% ===================== DEPENDENCIAS =====================
-    Main ..> RepositorioArchivo : «create»
-    Main ..> Controller : «create»
-    Main ..> Vista : «create»
+    
     Vista ..> LimiteMensual : «create»
 
     Controller ..> Consumo : «create»
