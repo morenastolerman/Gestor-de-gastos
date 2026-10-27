@@ -21,8 +21,14 @@ sequenceDiagram
             ControlGasto->>+Limite: aplica(consumo)
             Limite-->>-ControlGasto: true o false
             opt aplica
+                ControlGasto->>+ControlGasto: calcularGastado(limite)
                 ControlGasto->>+Repositorio: listar()
                 Repositorio-->>-ControlGasto: consumos
+                loop para cada consumo listado
+                    ControlGasto->>+Limite: aplica(consumo)
+                    Limite-->>-ControlGasto: true o false
+                end
+                ControlGasto-->>-ControlGasto: gastado
                 ControlGasto->>+Limite: estado(gastado)
                 Limite-->>-ControlGasto: Semaforo
             end
