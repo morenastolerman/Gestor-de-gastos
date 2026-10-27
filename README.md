@@ -2,6 +2,10 @@
 
 ## Documentación de Análisis
 
+# Gestor de Gastos
+
+## Documentación de Análisis
+
 ### P1. Objetivo y alcance
 
 El objetivo del Sistema de Control de Gastos es permitir que el usuario registre y administre sus gastos personales, controle sus presupuestos y analice sus hábitos de consumo, facilitando la organización de sus finanzas.
@@ -166,11 +170,21 @@ El diseño del sistema contempla las siguientes clases, interfaces y enumeracion
 - `Categoria`
 - `Semaforo` (enumeración)
 
-*DIAGRAMA DE CLASEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEES*
+El diagrama de clases completo, con atributos, métodos, relaciones y la justificación de GRASP y POO, está en [diagrama-de-clases.md](diagrama-de-clases.md).
+
+> En el código, `ReporteInterfaz` se llama `Reporte`, `RepositorioInterfaz` se llama `Repositorio` y `MedioDePago` se llama `MedioPago`. Además existe la interfaz `Criterio`, que implementan `CriterioRangoFechas` y `CriterioCategoria`, y la clase `Vista` (interfaz de usuario por consola).
 
 #### Diagramas de secuencia
 
-*DIAGRAMAS DE SECEUNIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA*
+- [CU1 – Registrar consumo y notificar](Diagramas/CU1.md)
+- [CU2 – Modificar consumo](Diagramas/CU2.md)
+- [CU3 – Eliminar consumo](Diagramas/CU3.md)
+- [CU5 – Definir límite](Diagramas/CU5.md)
+- [CU6 – Consultar saldo y estado](Diagramas/CU6.md)
+- [CU7 – Gestionar categorías](Diagramas/CU7.md)
+- [CU8 – Gestionar medios de pago](Diagramas/CU8.md)
+- [CU9 – Consultar reporte estadístico](Diagramas/CU9.md)
+- [CU10 – Consultar gastos del período](Diagramas/CU910.md)
 
 ### P6. Consideraciones de implementación
 - **Lenguaje de programación:** Java.
@@ -181,4 +195,5 @@ El diseño del sistema contempla las siguientes clases, interfaces y enumeracion
 - **Validaciones:** deben impedir el registro de datos inválidos y proporcionar mensajes claros.
 - **Polimorfismo:** debe utilizarse para representar comportamientos específicos de los medios de pago cuando corresponda.
 - **Integridad de datos:** la carga inicial no debe sobrescribir información existente y los cambios deben guardarse sin eliminar el historial de consumos.
+
 
