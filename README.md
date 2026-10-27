@@ -54,9 +54,9 @@ El sistema debe calcular el saldo disponible del presupuesto y determinar su est
 
 El estado debe representarse mediante un indicador visual tipo semáforo:
 
-- **Verde:** menos del 70 % del límite consumido.
-- **Amarillo:** desde el 70 % hasta menos del 100 % del límite consumido.
-- **Rojo:** 100 % o más del límite consumido.
+- **Verde:** menos del [ver] % del límite consumido.
+- **Amarillo:** desde el [ver] % hasta menos del 100 % del límite consumido.
+- **Rojo:** [ver] % o más del límite consumido.
 
 El sistema debe mostrar información clara sobre el porcentaje consumido y el saldo disponible.
 
@@ -120,7 +120,7 @@ El sistema contempla doce casos de uso principales, organizados en cinco módulo
 - **Módulo 5: Persistencia y archivos:** CU11.
 - **Caso de uso extendido:** CU12, validación y notificación de alertas de exceso.
 
-![Diagrama de casos de uso del Sistema de Control de Gastos](diagramas/casos_de_uso.png)
+![Diagrama de casos de uso del Sistema de Control de Gastos](diagramas/diagrama_casos_de_uso.png)
 
 ### P4. Requerimientos no funcionales
 
