@@ -1,4 +1,4 @@
-[DiagramaDeSecuenciaCU2 (1).md](https://github.com/user-attachments/files/33993724/DiagramaDeSecuenciaCU2.1.md)
+
 ```mermaid
 sequenceDiagram
     autonumber
