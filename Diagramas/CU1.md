@@ -7,7 +7,7 @@ sequenceDiagram
     participant Repositorio
     participant Limite
 
-    Usuario->>+Vista: registrar consumo (datos)
+    Usuario->>+Vista: registrarConsumo (datos)
     Vista->>+Controller: ingresarDatosConsumo(...)
 
     alt datos inválidos
