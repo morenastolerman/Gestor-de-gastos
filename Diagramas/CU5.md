@@ -6,7 +6,7 @@ sequenceDiagram
     participant CG as ControlGasto
     participant LM as LimiteMensual
 
-    Usuario->>+V: clicDefinirLimite(monto, mes, anio, umbral)
+    Usuario->>+V: definirLimite(monto, mes, anio, umbral)
     V->>+C: agregarLimite(monto, mes, anio, umbral)
 
     C->>C: validarDatos(monto, mes, anio, umbral)
