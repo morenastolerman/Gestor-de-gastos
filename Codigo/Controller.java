@@ -14,8 +14,19 @@ public class Controller {
 
     // ===================== CU1: Registrar consumo y notificar =====================
 
-    public void agregarLimite(Limite l) {
-        controlGasto.agregarLimite(l);
+    public List<String> definirLimite(double monto, YearMonth mes) {
+        List<String> mensajes = new ArrayList<>();
+        if (mes == null) {
+            mensajes.add("Datos incorrectos o incompletos");
+            return mensajes;
+        }
+        try {
+            controlGasto.agregarLimite(new LimiteMensual(monto, mes.atDay(1)));
+            mensajes.add("Límite agregado correctamente");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            mensajes.add("No se pudo agregar el límite: " + e.getMessage());
+        }
+        return mensajes;
     }
 
     private boolean validarDatos(double monto, LocalDate fecha, int cuotas, Categoria categoria,
