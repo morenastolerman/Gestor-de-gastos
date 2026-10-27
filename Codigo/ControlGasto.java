@@ -36,9 +36,9 @@ public class ControlGasto {
             Semaforo estado = l.estado(gastado);
             String detalle = String.format(" - gastaste %.2f de %.2f", gastado, l.getMonto());
 
-            if (estado == Semaforo.ROJO) {
+            if (estado.equals(Semaforo.ROJO)) {
                 alertas.add("ALERTA: Límite excedido (ROJO)" + detalle);
-            } else if (estado == Semaforo.AMARILLO) {
+            } else if (estado.equals(Semaforo.AMARILLO)) {
                 alertas.add("ADVERTENCIA: Cerca del límite (AMARILLO)" + detalle);
             }
         }
@@ -194,4 +194,6 @@ public class ControlGasto {
         criterios.add(new CriterioRangoFechas(desde, hasta));
         return reporte.generar(consultarConsumos(criterios), desde, hasta);
     }
+
+    
 }
