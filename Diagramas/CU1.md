@@ -1,3 +1,4 @@
+
 ```mermaid
 sequenceDiagram
     actor Usuario
@@ -13,6 +14,8 @@ sequenceDiagram
     alt datos inválidos
         Controller-->>Vista: mensaje de error
     else datos válidos
+        create participant Consumo
+        Controller->>Consumo: new Consumo(monto, fecha, descripcion, cuotas, categoria, medioPago)
         Controller->>+ControlGasto: registrar(consumo)
         ControlGasto->>+Repositorio: guardar(consumo)
         deactivate Repositorio
