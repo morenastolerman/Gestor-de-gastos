@@ -1,4 +1,3 @@
-
 ```mermaid
 sequenceDiagram
     actor Usuario
@@ -10,6 +9,9 @@ sequenceDiagram
 
     Usuario->>+Vista: registrarConsumo (datos)
     Vista->>+Controller: ingresarDatosConsumo(...)
+
+    Controller->>+Controller: validarDatos(monto, fecha, cuotas, categoria, medioPago)
+    Controller-->>-Controller: true o false
 
     alt datos inválidos
         Controller-->>Vista: mensaje de error
