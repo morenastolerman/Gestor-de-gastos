@@ -1,11 +1,10 @@
 # Diagrama de clases – Gestor de Gastos
 ```mermaid
 classDiagram
-    direction TB
+   
 
-    namespace Codigo {
+  
         class Vista {
-            <<vista>>
             -FECHA: DateTimeFormatter$
             -MES: DateTimeFormatter$
             -in: Scanner
@@ -28,7 +27,6 @@ classDiagram
         }
 
         class Controller {
-            <<controlador>>
             +Controller(repositorio: Repositorio)
             +definirLimite(monto: double, mes: YearMonth) List~String~
             -validarDatos(monto: double, fecha: LocalDate, cuotas: int, categoria: Categoria, medioDePago: MedioPago) boolean
@@ -48,7 +46,6 @@ classDiagram
         }
 
         class ControlGasto {
-            <<modelo>>
             +ControlGasto(repositorio: Repositorio)
             +agregarLimite(l: Limite)
             +registrar(c: Consumo) List~String~
@@ -223,7 +220,7 @@ classDiagram
             AMARILLO
             VERDE
         }
-    }
+    
 
     %% Asociaciones (el rol reemplaza al atributo)
     Vista "1" --> "1" Controller : -controller
