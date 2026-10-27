@@ -54,9 +54,9 @@ El sistema debe calcular el saldo disponible del presupuesto y determinar su est
 
 El estado debe representarse mediante un indicador visual tipo semáforo:
 
-- **Verde:** menos del [ver] % del límite consumido.
-- **Amarillo:** desde el [ver] % hasta menos del 100 % del límite consumido.
-- **Rojo:** [ver] % o más del límite consumido.
+- **Verde:** menos del 80 % del límite consumido.
+- **Amarillo:** desde el 80 % hasta el 95 % del límite consumido.
+- **Rojo:** 95 % o más del límite consumido.
 
 El sistema debe mostrar información clara sobre el porcentaje consumido y el saldo disponible.
 
