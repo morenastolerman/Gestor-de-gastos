@@ -5,7 +5,7 @@ sequenceDiagram
     participant V as :VistaGrafica
     participant C as :Controller
     participant CG as :ControlGasto
-    participant R as :RepositorioArchivo
+    participant R as :Repositorio
     participant CAT as :Categoria
     participant CON as :Consumo
 
