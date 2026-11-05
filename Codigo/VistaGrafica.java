@@ -82,14 +82,14 @@ public class VistaGrafica {
                 controller::modificarMedioPago, controller::eliminarMedioPago));
         pestanas.addTab("Reporte estadístico", pestanaReporteEstadistico());
         pestanas.addTab("Gastos del período", pestanaGastosPeriodo());
-
+        pestanas.insertTab("Modificar / eliminar consumo", null, pestanaModificarEliminar(), null, 1); // CU2 y CU3
         // al cambiar de pestaña se actualizan listas y combos (por si cambiaron categorías o medios)
         pestanas.addChangeListener(e -> actualizarListas());
         actualizarListas();
 
         ventana.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         ventana.add(pestanas);
-        ventana.setSize(820, 560);
+        ventana.setSize(1000, 600);
         ventana.setLocationRelativeTo(null);
         ventana.setVisible(true);
         return ventana;
@@ -419,5 +419,112 @@ public class VistaGrafica {
         } catch (DateTimeParseException e) {
             throw new IllegalArgumentException("Mes inválido en " + nombre + ", usá MM/yyyy");
         }
+    }
+
+    // ===================== CU2: Modificar consumo y CU3: Eliminar consumo =====================
+
+    private JComponent pestanaModificarEliminar() {
+        DefaultListModel<Consumo> modelo = new DefaultListModel<>();
+        JList<Consumo> lista = new JList<>(modelo);
+        lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        lista.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
+        lista.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> l, Object valor, int indice,
+                    boolean seleccionado, boolean foco) {
+                super.getListCellRendererComponent(l, valor, indice, seleccionado, foco);
+                if (valor instanceof Consumo) setText(describir((Consumo) valor));
+                return this;
+            }
+        });
+
+        JTextField txtMonto = new JTextField(12);
+        JTextField txtFecha = new JTextField(12);
+        JTextField txtDescripcion = new JTextField(24);
+        JSpinner spCuotas = new JSpinner(new SpinnerNumberModel(1, 1, 120, 1));
+        JComboBox<Categoria> cmbCategoriaEditar = new JComboBox<>();
+        JComboBox<MedioPago> cmbMedioEditar = new JComboBox<>();
+        configurarCombo(cmbCategoriaEditar);
+        configurarCombo(cmbMedioEditar);
+
+        // se ejecuta cada vez que se llama a actualizarListas()
+        recargas.add(() -> {
+            modelo.clear();
+            for (Consumo c : controller.listarConsumos()) modelo.addElement(c);
+            cmbCategoriaEditar.removeAllItems();
+            for (Categoria c : controller.obtenerCategorias()) cmbCategoriaEditar.addItem(c);
+            cmbMedioEditar.removeAllItems();
+            for (MedioPago m : controller.obtenerMediosPago()) cmbMedioEditar.addItem(m);
+        });
+
+        // al elegir un consumo se copian sus datos al formulario, para poder editarlos
+        lista.addListSelectionListener(e -> {
+            Consumo elegido = lista.getSelectedValue();
+            if (e.getValueIsAdjusting() || elegido == null) return;
+            txtMonto.setText(String.valueOf(elegido.getMonto()));
+            txtFecha.setText(elegido.getFecha().format(FECHA));
+            txtDescripcion.setText(elegido.getDescripcion());
+            spCuotas.setValue(elegido.getCuotas());
+            cmbCategoriaEditar.setSelectedItem(elegido.getCategoria());
+            cmbMedioEditar.setSelectedItem(elegido.getMedioDePago());
+        });
+
+        JButton btnModificar = new JButton("Modificar");
+        btnModificar.addActionListener(e -> ejecutar(() -> {
+            Consumo elegido = lista.getSelectedValue();
+            if (elegido == null) {
+                aviso("Elegí un consumo de la lista");
+                return;
+            }
+            double monto = leerDecimal(txtMonto, "el monto");
+            LocalDate fecha = leerFecha(txtFecha, "la fecha", false);
+            int cuotas = (Integer) spCuotas.getValue();
+            Categoria categoria = (Categoria) cmbCategoriaEditar.getSelectedItem();
+            MedioPago medio = (MedioPago) cmbMedioEditar.getSelectedItem();
+            mostrar(controller.modificarConsumo(elegido.getId(), monto, fecha, txtDescripcion.getText(),
+                    cuotas, categoria, medio));
+            actualizarListas();
+        }));
+
+        JButton btnEliminar = new JButton("Eliminar");
+        btnEliminar.addActionListener(e -> ejecutar(() -> {
+            Consumo elegido = lista.getSelectedValue();
+            if (elegido == null) {
+                aviso("Elegí un consumo de la lista");
+                return;
+            }
+            int respuesta = JOptionPane.showConfirmDialog(ventana,
+                    "¿Eliminar \"" + elegido.getDescripcion() + "\"?", "Eliminar consumo", JOptionPane.YES_NO_OPTION);
+            if (respuesta != JOptionPane.YES_OPTION) return;
+            mostrar(controller.eliminarConsumo(elegido.getId()));
+            txtMonto.setText("");
+            txtFecha.setText("");
+            txtDescripcion.setText("");
+            spCuotas.setValue(1);
+            actualizarListas();
+        }));
+
+        JPanel form = formulario(
+                new String[] {"Monto", "Fecha (dd/MM/yyyy)", "Descripción", "Cuotas", "Categoría", "Medio de pago"},
+                new JComponent[] {txtMonto, txtFecha, txtDescripcion, spCuotas, cmbCategoriaEditar, cmbMedioEditar});
+        JPanel botones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        botones.add(btnModificar);
+        botones.add(btnEliminar);
+        JPanel sur = new JPanel(new BorderLayout());
+        sur.add(form, BorderLayout.CENTER);
+        sur.add(botones, BorderLayout.SOUTH);
+
+        JPanel panel = new JPanel(new BorderLayout(8, 8));
+        panel.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+        panel.add(new JLabel("Consumos (elegí uno para modificarlo o eliminarlo)"), BorderLayout.NORTH);
+        panel.add(new JScrollPane(lista), BorderLayout.CENTER);
+        panel.add(sur, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    // una línea por consumo en la lista de CU2 y CU3
+    private String describir(Consumo c) {
+        return String.format("%d | %s | %s | %s | %s | %.2f", c.getId(), c.getFecha().format(FECHA),
+                c.getDescripcion(), c.getCategoria().getNombre(), c.getMedioDePago().getNombre(), c.getMonto());
     }
 }

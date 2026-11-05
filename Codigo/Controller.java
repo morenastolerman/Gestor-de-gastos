@@ -200,4 +200,43 @@ public class Controller {
         if (mes == null) return "Datos incorrectos o incompletos";
         return generarReporteGastos(mes.atDay(1), mes.atEndOfMonth());
     }
+
+    // ===================== CU2: Modificar consumo =====================
+
+    // la vista los muestra para que el usuario elija cuál modificar o eliminar
+    public List<Consumo> listarConsumos() {
+        return controlGasto.listarConsumos();
+    }
+
+    // mismas validaciones que al registrar; se conserva el id del consumo elegido
+    public List<String> modificarConsumo(int id, double monto, LocalDate fecha, String descripcion, int cuotas,
+            Categoria categoria, MedioPago medioDePago) {
+        List<String> mensajes = new ArrayList<>();
+        if (!validarDatos(monto, fecha, cuotas, categoria, medioDePago)) {
+            mensajes.add("Datos incorrectos o incompletos");
+            return mensajes;
+        }
+        try {
+            Consumo editado = new Consumo(id, monto, fecha, descripcion, cuotas, categoria, medioDePago);
+            List<String> alertas = controlGasto.modificarConsumo(editado);
+            mensajes.add("Consumo modificado correctamente");
+            mensajes.addAll(alertas);
+        } catch (IllegalArgumentException e) {
+            mensajes.add(e.getMessage());
+        }
+        return mensajes;
+    }
+
+    // ===================== CU3: Eliminar consumo =====================
+
+    public List<String> eliminarConsumo(int id) {
+        List<String> mensajes = new ArrayList<>();
+        try {
+            controlGasto.eliminarConsumo(id);
+            mensajes.add("Consumo eliminado correctamente");
+        } catch (IllegalArgumentException e) {
+            mensajes.add(e.getMessage());
+        }
+        return mensajes;
+    }
 }

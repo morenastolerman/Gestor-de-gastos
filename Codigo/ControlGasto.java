@@ -1,5 +1,6 @@
 package Codigo;
 
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -27,15 +28,15 @@ public class ControlGasto {
 
     public List<String> registrar(Consumo c) {
         repositorio.guardar(c);
+        return calcularAlertas(c);
+    }
+    private List<String> calcularAlertas(Consumo c) { // CU12: lo usan CU1 (registrar) y CU2 (modificar)
         List<String> alertas = new ArrayList<>();
-
         for (Limite l : limites) {
             if (!l.aplica(c)) continue; // solo los límites que corresponden a este consumo
-
             double gastado = calcularGastado(l);
             Semaforo estado = l.estado(gastado);
             String detalle = String.format(" - gastaste %.2f de %.2f", gastado, l.getMonto());
-
             if (estado.equals(Semaforo.ROJO)) {
                 alertas.add("ALERTA: Límite excedido (ROJO)" + detalle);
             } else if (estado.equals(Semaforo.AMARILLO)) {
@@ -196,4 +197,35 @@ public class ControlGasto {
     }
 
     
+    // ===================== CU2: Modificar consumo =====================
+
+    // todos los consumos, ordenados por fecha (para elegir cuál modificar o eliminar)
+    public List<Consumo> listarConsumos() {
+        List<Consumo> consumos = repositorio.listar();
+        consumos.sort(Comparator.comparing(Consumo::getFecha));
+        return consumos;
+    }
+
+    // reemplaza el consumo guardado por el editado y vuelve a revisar los límites (CU12)
+    // IllegalArgumentException si el consumo no existe
+    public List<String> modificarConsumo(Consumo editado) {
+        buscarConsumo(editado.getId());
+        repositorio.actualizar(editado);
+        return calcularAlertas(editado);
+    }
+
+    // ===================== CU3: Eliminar consumo =====================
+
+    // IllegalArgumentException si el consumo no existe
+    public void eliminarConsumo(int id) {
+        buscarConsumo(id);
+        repositorio.eliminar(id);
+    }
+
+    private Consumo buscarConsumo(int id) {
+        for (Consumo c : repositorio.listar()) {
+            if (c.getId() == id) return c;
+        }
+        throw new IllegalArgumentException("El consumo no existe");
+    }
 }

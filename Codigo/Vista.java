@@ -29,7 +29,7 @@ public class Vista {
             System.out.println("3. Gestionar categorías");
             System.out.println("4. Gestionar medios de pago");
             System.out.println("5. Reporte estadístico");
-            System.out.println("6. Gastos del período");
+            System.out.println("6. Gastos del período\n7. Modificar consumo\n8. Eliminar consumo");
             System.out.println("0. Salir");
             opcion = leerEntero("Opción: ");
 
@@ -39,7 +39,7 @@ public class Vista {
                 case 3: menuCategorias(); break;
                 case 4: menuMediosPago(); break;
                 case 5: reporteEstadistico(); break;
-                case 6: menuGastosPeriodo(); break;
+                case 6: menuGastosPeriodo(); break;   case 7: modificarConsumo(); break;   case 8: eliminarConsumo(); break;
                 case 0: System.out.println("Hasta luego"); break;
                 default: System.out.println("Opción inválida");
             }
@@ -246,6 +246,115 @@ public class Vista {
                 return YearMonth.parse(in.nextLine().trim(), MES);
             } catch (DateTimeParseException e) {
                 System.out.println("Formato inválido, usá MM/yyyy");
+            }
+        }
+    }
+
+    // ===================== CU2: Modificar consumo =====================
+
+    private void modificarConsumo() {
+        Consumo actual = elegirConsumo();
+        if (actual == null) return;
+
+        System.out.println("(Enter vacío = deja el valor actual)");
+        double monto = leerDecimal("Monto [" + actual.getMonto() + "]: ", actual.getMonto());
+        LocalDate fecha = leerFecha("Fecha [" + actual.getFecha().format(FECHA) + "]: ", actual.getFecha());
+        String descripcion = leerTexto("Descripción [" + actual.getDescripcion() + "]: ", actual.getDescripcion());
+        int cuotas = leerEntero("Cuotas [" + actual.getCuotas() + "]: ", actual.getCuotas());
+
+        System.out.println("Categorías: " + controller.obtenerCategorias());
+        int idCategoria = leerEntero("Id de categoría [" + actual.getCategoria().getId() + "]: ",
+                actual.getCategoria().getId());
+        Categoria categoria = buscarCategoria(idCategoria);
+
+        System.out.println("Medios de pago: " + controller.obtenerMediosPago());
+        int idMedio = leerEntero("Id de medio de pago [" + actual.getMedioDePago().getId() + "]: ",
+                actual.getMedioDePago().getId());
+        MedioPago medio = buscarMedio(idMedio);
+
+        mostrar(controller.modificarConsumo(actual.getId(), monto, fecha, descripcion, cuotas, categoria, medio));
+    }
+
+    // ===================== CU3: Eliminar consumo =====================
+
+    private void eliminarConsumo() {
+        Consumo elegido = elegirConsumo();
+        if (elegido == null) return;
+
+        String respuesta = leerTexto("¿Eliminar \"" + elegido.getDescripcion() + "\"? (s/n): ", "n");
+        if (!respuesta.equalsIgnoreCase("s")) {
+            System.out.println("No se eliminó el consumo");
+            return;
+        }
+        mostrar(controller.eliminarConsumo(elegido.getId()));
+    }
+
+    // ===================== AUXILIARES de CU2 y CU3 =====================
+
+    // muestra los consumos y devuelve el elegido por id (null si no hay o no existe)
+    private Consumo elegirConsumo() {
+        List<Consumo> consumos = controller.listarConsumos();
+        if (consumos.isEmpty()) {
+            System.out.println("No hay consumos registrados");
+            return null;
+        }
+        for (Consumo c : consumos) System.out.println(describir(c));
+
+        int id = leerEntero("Id del consumo: ");
+        for (Consumo c : consumos) {
+            if (c.getId() == id) return c;
+        }
+        System.out.println("El consumo no existe");
+        return null;
+    }
+
+    private String describir(Consumo c) {
+        return String.format("%d | %s | %s | %s | %s | %.2f", c.getId(), c.getFecha().format(FECHA),
+                c.getDescripcion(), c.getCategoria().getNombre(), c.getMedioDePago().getNombre(), c.getMonto());
+    }
+
+    // lectura con valor actual: Enter vacío devuelve el valor actual
+    private String leerTexto(String texto, String actual) {
+        System.out.print(texto);
+        String s = in.nextLine().trim();
+        return s.isEmpty() ? actual : s;
+    }
+
+    private int leerEntero(String texto, int actual) {
+        while (true) {
+            System.out.print(texto);
+            String s = in.nextLine().trim();
+            if (s.isEmpty()) return actual;
+            try {
+                return Integer.parseInt(s);
+            } catch (NumberFormatException e) {
+                System.out.println("Ingresá un número entero");
+            }
+        }
+    }
+
+    private double leerDecimal(String texto, double actual) {
+        while (true) {
+            System.out.print(texto);
+            String s = in.nextLine().trim();
+            if (s.isEmpty()) return actual;
+            try {
+                return Double.parseDouble(s.replace(',', '.'));
+            } catch (NumberFormatException e) {
+                System.out.println("Ingresá un número válido");
+            }
+        }
+    }
+
+    private LocalDate leerFecha(String texto, LocalDate actual) {
+        while (true) {
+            System.out.print(texto);
+            String s = in.nextLine().trim();
+            if (s.isEmpty()) return actual;
+            try {
+                return LocalDate.parse(s, FECHA);
+            } catch (DateTimeParseException e) {
+                System.out.println("Formato inválido, usá dd/MM/yyyy");
             }
         }
     }

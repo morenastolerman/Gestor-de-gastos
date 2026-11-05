@@ -20,4 +20,10 @@ public interface Repositorio {
     List<MedioPago> listarMediosPago();
     void actualizarMedioPago(MedioPago m);
     void eliminarMedioPago(int id);
+
+    // ===================== CU2: Modificar consumo =====================
+    void actualizar(Consumo c);                  // reemplaza el consumo que tiene el mismo id
+
+    // ===================== CU3: Eliminar consumo =====================
+    void eliminar(int id);
 }

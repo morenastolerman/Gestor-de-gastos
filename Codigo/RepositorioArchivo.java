@@ -252,4 +252,34 @@ public class RepositorioArchivo implements Repositorio {
         if (s == null) return "";
         return s.replace(SEP, ",").replace("\r", " ").replace("\n", " ");
     }
+
+    // ===================== CU2: Modificar consumo =====================
+
+    @Override
+    public void actualizar(Consumo c) {
+        List<Consumo> consumos = listar();
+        for (int i = 0; i < consumos.size(); i++) {
+            if (consumos.get(i).getId() == c.getId()) {
+                consumos.set(i, c);
+                break;
+            }
+        }
+        reescribirConsumos(consumos);
+    }
+
+    // ===================== CU3: Eliminar consumo =====================
+
+    @Override
+    public void eliminar(int id) {
+        List<Consumo> consumos = listar();
+        consumos.removeIf(c -> c.getId() == id);
+        reescribirConsumos(consumos);
+    }
+
+    // vuelve a escribir consumos.csv completo (lo usan CU2 y CU3)
+    private void reescribirConsumos(List<Consumo> consumos) {
+        List<String> lineas = new ArrayList<>();
+        for (Consumo c : consumos) lineas.add(aLinea(c));
+        escribirLineas(archivo, lineas);
+    }
 }
