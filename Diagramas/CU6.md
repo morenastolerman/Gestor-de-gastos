@@ -7,7 +7,7 @@ sequenceDiagram
     participant R as Repositorio
     participant LM as LimiteMensual
 
-    Usuario->>+V: ConsultarSaldo(mes, anio)
+    Usuario->>+V: clicConsultarSaldo(mes, anio)
     V->>+C: consultarSaldoYEstado(mes, anio)
 
     C->>C: calcular fechaInicio (primer dia del mes)
@@ -39,8 +39,7 @@ sequenceDiagram
 
     CG-->>-C: resultado
     C-->>-V: resultado
-
+```
 
     V->>V: mostrarLimites(resultado)
     V-->>-Usuario: muestra saldo y estado
-```

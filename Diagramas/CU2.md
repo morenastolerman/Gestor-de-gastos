@@ -1,3 +1,4 @@
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -5,35 +6,46 @@ sequenceDiagram
     participant V as Vista
     participant C as Controller
     participant G as ControlGasto
-    participant R as Repositorio
+    participant R as RepositorioArchivo
 
-    U->>+V: modificarConsumo(id, monto, fecha, descripcion, cuotas, categoria, medioPago)
-    V->>+C: modificarConsumo(id, monto, fecha, descripcion, cuotas, categoria, medioPago)
+    U->>V: Consultar consumos
+    activate V
+    V->>C: listarConsumos()
+    activate C
+    C->>G: listarConsumos()
+    activate G
+    G->>R: listar()
+    activate R
+    R-->>G: consumos
+    deactivate R
+    G-->>C: consumos
+    deactivate G
+    C-->>V: consumos
+    deactivate C
+    V->>V: mostrarConsumos(consumos)
+    deactivate V
 
-    C->>C: validarDatos(monto, fecha, cuotas, categoria, medioPago)
+    U->>V: Editar consumo y confirmar
+    activate V
+    V->>C: modificarConsumo(consumoEditado)
+    activate C
+    C->>C: validarDatos()
 
-    alt datos invalidos
-        C-->>V: mensajes ("Datos incorrectos o incompletos")
-    else datos validos
-        C->>C: new Consumo(id, monto, fecha, descripcion, cuotas, categoria, medioPago)
-        C->>+G: modificarConsumo(consumo)
-        G->>+R: listar()
-        R-->>-G: consumos
-        G->>G: buscarConsumo(id)
-
-        alt el consumo no existe
-            G-->>C: IllegalArgumentException
-            C-->>V: mensajes ("El consumo no existe")
-        else el consumo existe
-            G->>+R: actualizarConsumo(consumo)
-            R-->>-G: listo
-            G-->>C: listo
-            C-->>V: mensajes ("Consumo modificado correctamente")
-        end
+    alt Datos válidos
+        C->>G: modificarConsumo(consumoEditado)
+        activate G
+        G->>R: actualizar(consumoEditado)
+        activate R
+        R-->>G: resultado
+        deactivate R
+        G-->>C: resultado
         deactivate G
+        C-->>V: resultado
+    else Datos inválidos
+        C-->>V: error de validación
     end
 
+    V->>V: mostrarResultado()
     deactivate C
-    V->>V: mostrar(mensajes)
-    V-->>-U: muestra el resultado
+    deactivate V
 ```
