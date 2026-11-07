@@ -12,7 +12,7 @@ public class Controller {
         this.controlGasto = new ControlGasto(repositorio);
     }
 
-    // ===================== CU1: Registrar consumo y notificar =====================
+    // ===================== CU5: Definir y modificar límite =====================
 
     public List<String> definirLimite(double monto, YearMonth mes) {
         List<String> mensajes = new ArrayList<>();
@@ -28,6 +28,46 @@ public class Controller {
         }
         return mensajes;
     }
+
+    // crea un límite nuevo con el monto nuevo y reemplaza al del mismo mes
+    public List<String> modificarLimite(double monto, YearMonth mes) {
+        List<String> mensajes = new ArrayList<>();
+        if (mes == null) {
+            mensajes.add("Datos incorrectos o incompletos");
+            return mensajes;
+        }
+        try {
+            controlGasto.modificarLimite(new LimiteMensual(monto, mes.atDay(1)));
+            mensajes.add("Límite modificado correctamente");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            mensajes.add("No se pudo modificar el límite: " + e.getMessage());
+        }
+        return mensajes;
+    }
+
+    public List<Limite> obtenerLimites() {
+        return controlGasto.getLimites();
+    }
+
+    // ===================== CU6: Consultar saldo y estado =====================
+
+    public List<String> consultarSaldo(YearMonth mes) {
+        List<String> mensajes = new ArrayList<>();
+        if (mes == null) {
+            mensajes.add("Datos incorrectos o incompletos");
+            return mensajes;
+        }
+        try {
+            mensajes.add("Saldo y estado de " + String.format("%02d/%d", mes.getMonthValue(), mes.getYear()));
+            mensajes.addAll(controlGasto.consultarSaldo(mes.atDay(1)));
+        } catch (IllegalArgumentException e) {
+            mensajes.clear();
+            mensajes.add(e.getMessage());
+        }
+        return mensajes;
+    }
+
+    // ===================== CU1: Registrar consumo y notificar =====================
 
     private boolean validarDatos(double monto, LocalDate fecha, int cuotas, Categoria categoria,
             MedioPago medioDePago) {
@@ -149,10 +189,12 @@ public class Controller {
             return e.getMessage();
         }
     } 
-   // ===================== CU10: Consultar gastos del período =====================
+    // ===================== CU4: Consultar y filtrar consumos =====================
 
-    // desde/hasta: ambos o ninguno. categoria: null = todas.
-    public List<String> consultarConsumos(LocalDate desde, LocalDate hasta, Categoria categoria) {
+    // Todos los filtros son opcionales: desde/hasta (ambos o ninguno), categoría y medio de pago (null = todos),
+    // palabra clave (vacía = sin filtro). Se arma un Criterio por cada filtro elegido (patrón Strategy).
+    public List<String> consultarConsumos(LocalDate desde, LocalDate hasta, Categoria categoria,
+            MedioPago medioDePago, String palabraClave) {
         List<String> mensajes = new ArrayList<>();
         if ((desde == null) != (hasta == null)) {
             mensajes.add("Datos incorrectos o incompletos");
@@ -167,6 +209,8 @@ public class Controller {
             return mensajes;
         }
         if (categoria != null) criterios.add(new CriterioCategoria(categoria));
+        if (medioDePago != null) criterios.add(new CriterioMedioPago(medioDePago));
+        if (palabraClave != null && !palabraClave.isBlank()) criterios.add(new CriterioPalabraClave(palabraClave));
 
         List<Consumo> consumos = controlGasto.consultarConsumos(criterios);
         if (consumos.isEmpty()) {
@@ -185,6 +229,8 @@ public class Controller {
         mensajes.add(String.format("Total: %.2f (%d consumo(s))", total, consumos.size()));
         return mensajes;
     }
+
+    // ===================== CU10: Consultar gastos del período =====================
 
     // Devuelve el reporte listo para mostrar, o el mensaje de error si el rango es inválido
     public String generarReporteGastos(LocalDate desde, LocalDate hasta) {
