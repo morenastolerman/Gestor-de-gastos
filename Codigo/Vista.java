@@ -23,36 +23,73 @@ public class Vista {
     public void iniciar() {
         int opcion;
         do {
+            // cada opción tiene el mismo número que su caso de uso
             System.out.println("\n===== CONTROL DE GASTOS =====");
             System.out.println("1. Registrar consumo");
-            System.out.println("2. Definir límite mensual");
-            System.out.println("3. Gestionar categorías");
-            System.out.println("4. Gestionar medios de pago");
-            System.out.println("5. Reporte estadístico");
-            System.out.println("6. Gastos del período\n7. Modificar consumo\n8. Eliminar consumo");
+            System.out.println("2. Modificar consumo");
+            System.out.println("3. Eliminar consumo");
+            System.out.println("4. Consultar y filtrar consumos");
+            System.out.println("5. Definir o modificar límite mensual");
+            System.out.println("6. Consultar saldo y estado");
+            System.out.println("7. Gestionar categorías");
+            System.out.println("8. Gestionar medios de pago");
+            System.out.println("9. Reporte estadístico");
+            System.out.println("10. Gastos del período");
             System.out.println("0. Salir");
             opcion = leerEntero("Opción: ");
 
             switch (opcion) {
                 case 1: registrarConsumo(); break;
-                case 2: definirLimite(); break;
-                case 3: menuCategorias(); break;
-                case 4: menuMediosPago(); break;
-                case 5: reporteEstadistico(); break;
-                case 6: menuGastosPeriodo(); break;   case 7: modificarConsumo(); break;   case 8: eliminarConsumo(); break;
+                case 2: modificarConsumo(); break;
+                case 3: eliminarConsumo(); break;
+                case 4: consultarConsumos(); break;
+                case 5: menuLimites(); break;
+                case 6: consultarSaldo(); break;
+                case 7: menuCategorias(); break;
+                case 8: menuMediosPago(); break;
+                case 9: reporteEstadistico(); break;
+                case 10: menuGastosPeriodo(); break;
                 case 0: System.out.println("Hasta luego"); break;
                 default: System.out.println("Opción inválida");
             }
         } while (opcion != 0);
     }
 
-    // ===================== CU1: Registrar consumo y notificar =====================
+    // ===================== CU5: Definir y modificar límite =====================
 
-   private void definirLimite() {
+    private void menuLimites() {
+        System.out.println("\n--- Límite mensual ---");
+        List<Limite> limites = controller.obtenerLimites();
+        System.out.println(limites.isEmpty() ? "No hay límites definidos" : "Límites definidos: " + limites);
+        System.out.println("1. Definir límite");
+        System.out.println("2. Modificar límite");
+        switch (leerEntero("Opción: ")) {
+            case 1: definirLimite(); break;
+            case 2: modificarLimite(); break;
+            default: System.out.println("Opción inválida");
+        }
+    }
+
+    private void definirLimite() {
         double monto = leerDecimal("Monto del límite: ");
         YearMonth mes = leerMes("Mes del límite (MM/yyyy): ");
         mostrar(controller.definirLimite(monto, mes));
     }
+
+    private void modificarLimite() {
+        YearMonth mes = leerMes("Mes del límite a modificar (MM/yyyy): ");
+        double monto = leerDecimal("Nuevo monto: ");
+        mostrar(controller.modificarLimite(monto, mes));
+    }
+
+    // ===================== CU6: Consultar saldo y estado =====================
+
+    private void consultarSaldo() {
+        YearMonth mes = leerMes("Mes a consultar (MM/yyyy): ");
+        mostrar(controller.consultarSaldo(mes));
+    }
+
+    // ===================== CU1: Registrar consumo y notificar =====================
 
     private void registrarConsumo() {
         double monto = leerDecimal("Monto: ");
@@ -145,20 +182,16 @@ public class Vista {
 
     private void menuGastosPeriodo() {
         System.out.println("\n--- Gastos del período ---");
-        System.out.println("1. Consultar consumos (filtros opcionales)");
-        System.out.println("2. Reporte de gastos por rango de fechas");
-        System.out.println("3. Reporte de gastos de un mes");
+        System.out.println("1. Reporte de gastos por rango de fechas");
+        System.out.println("2. Reporte de gastos de un mes");
         switch (leerEntero("Opción: ")) {
             case 1:
-                consultarConsumos();
-                break;
-            case 2:
                 LocalDate desde = leerFecha("Desde (dd/MM/yyyy): ", false);
                 LocalDate hasta = leerFecha("Hasta (dd/MM/yyyy): ", false);
                 System.out.println();
                 System.out.println(controller.generarReporteGastos(desde, hasta));
                 break;
-            case 3:
+            case 2:
                 YearMonth mes = leerMes("Mes (MM/yyyy): ");
                 System.out.println();
                 System.out.println(controller.generarReporteGastosMensual(mes));
@@ -168,6 +201,9 @@ public class Vista {
         }
     }
 
+    // ===================== CU4: Consultar y filtrar consumos =====================
+
+    // todos los filtros son opcionales
     private void consultarConsumos() {
         System.out.println("(Enter vacío en las fechas = sin filtro de fechas)");
         LocalDate desde = leerFecha("Desde (dd/MM/yyyy): ", true);
@@ -180,7 +216,17 @@ public class Vista {
             System.out.println("La categoría no existe");
             return;
         }
-        mostrar(controller.consultarConsumos(desde, hasta, categoria));
+
+        System.out.println("Medios de pago: " + controller.obtenerMediosPago());
+        int idMedio = leerEntero("Id de medio de pago (0 = todos): ");
+        MedioPago medio = idMedio == 0 ? null : buscarMedio(idMedio);
+        if (idMedio != 0 && medio == null) {
+            System.out.println("El medio de pago no existe");
+            return;
+        }
+
+        String palabraClave = leerTexto("Palabra clave o #hashtag (Enter = sin filtro): ", "");
+        mostrar(controller.consultarConsumos(desde, hasta, categoria, medio, palabraClave));
     }
 
     // ===================== AUXILIARES (usados por todos los CU) =====================
