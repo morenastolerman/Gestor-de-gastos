@@ -10,20 +10,28 @@ classDiagram
         -Scanner in
         +Vista(Controller controller)
         +iniciar() void
-        -definirLimite() void
         -registrarConsumo() void
+        -modificarConsumo() void
+        -eliminarConsumo() void
+        -consultarConsumos() void
+        -menuLimites() void
+        -definirLimite() void
+        -modificarLimite() void
+        -consultarSaldo() void
         -menuCategorias() void
         -menuMediosPago() void
         -reporteEstadistico() void
         -menuGastosPeriodo() void
-        -consultarConsumos() void
         -mostrar(List~String~ mensajes) void
         -buscarCategoria(int id) Categoria
         -buscarMedio(int id) MedioPago
+        -elegirConsumo() Consumo
+        -describir(Consumo c) String
         -leerEntero(String texto) int
         -leerDecimal(String texto) double
         -leerFecha(String texto, boolean opcional) LocalDate
         -leerMes(String texto) YearMonth
+        -leerTexto(String texto, String actual) String
     }
 
     class VistaGrafica {
@@ -31,17 +39,24 @@ classDiagram
         -DateTimeFormatter FECHA$
         -DateTimeFormatter MES$
         -Categoria TODAS$
+        -MedioPago TODOS$
         -Controller controller
         -JFrame ventana
         -JTabbedPane pestanas
         -JComboBox~Categoria~ cmbCategoria
         -JComboBox~MedioPago~ cmbMedio
         -JComboBox~Categoria~ cmbFiltroCategoria
+        -JComboBox~MedioPago~ cmbFiltroMedio
         -List~Runnable~ recargas
         +VistaGrafica(Controller controller)
         +mostrar() JFrame
         -pestanaRegistrar() JComponent
+        -pestanaModificarEliminar() JComponent
+        -pestanaConsultar() JComponent
         -pestanaLimite() JComponent
+        -pestanaSaldo() JComponent
+        -semaforoDe(List~String~ mensajes) Semaforo
+        -pintarSemaforo(JLabel etiqueta, Semaforo estado) void
         -panelMaestro(String titulo, Supplier listar, ToIntFunction idDe, Function nombreDe, Function agregar, BiFunction modificar, Function eliminar) JComponent
         -pestanaReporteEstadistico() JComponent
         -pestanaGastosPeriodo() JComponent
@@ -57,6 +72,7 @@ classDiagram
         -leerDecimal(JTextField campo, String nombre) double
         -leerFecha(JTextField campo, String nombre, boolean opcional) LocalDate
         -leerMes(JTextField campo, String nombre) YearMonth
+        -describir(Consumo c) String
     }
 
     class Controller {
@@ -64,8 +80,14 @@ classDiagram
         -ControlGasto controlGasto
         +Controller(Repositorio repositorio)
         +definirLimite(double monto, YearMonth mes) List~String~
+        +modificarLimite(double monto, YearMonth mes) List~String~
+        +obtenerLimites() List~Limite~
+        +consultarSaldo(YearMonth mes) List~String~
         -validarDatos(double monto, LocalDate fecha, int cuotas, Categoria categoria, MedioPago medioDePago) boolean
         +ingresarDatosConsumo(double monto, LocalDate fecha, String descripcion, int cuotas, Categoria categoria, MedioPago medioDePago) List~String~
+        +listarConsumos() List~Consumo~
+        +modificarConsumo(int id, double monto, LocalDate fecha, String descripcion, int cuotas, Categoria categoria, MedioPago medioDePago) List~String~
+        +eliminarConsumo(int id) List~String~
         +agregarCategoria(String nombre) List~String~
         +modificarCategoria(int id, String nuevoNombre) List~String~
         +eliminarCategoria(int id) List~String~
@@ -75,7 +97,7 @@ classDiagram
         +eliminarMedioPago(int id) List~String~
         +obtenerMediosPago() List~MedioPago~
         +generarReporteEstadistico(LocalDate desde, LocalDate hasta) String
-        +consultarConsumos(LocalDate desde, LocalDate hasta, Categoria categoria) List~String~
+        +consultarConsumos(LocalDate desde, LocalDate hasta, Categoria categoria, MedioPago medioDePago, String palabraClave) List~String~
         +generarReporteGastos(LocalDate desde, LocalDate hasta) String
         +generarReporteGastosMensual(YearMonth mes) String
     }
@@ -86,8 +108,18 @@ classDiagram
         -List~Limite~ limites
         +ControlGasto(Repositorio repositorio)
         +agregarLimite(Limite l) void
+        +modificarLimite(Limite nuevo) void
+        +getLimites() List~Limite~
+        +consultarSaldo(LocalDate fecha) List~String~
+        -buscarLimite(LocalDate fecha) Limite
         +registrar(Consumo c) List~String~
+        -calcularAlertas(Consumo c) List~String~
+        -alertaDe(Limite l, double gastado) String
         -calcularGastado(Limite l) double
+        +listarConsumos() List~Consumo~
+        +modificarConsumo(Consumo editado) List~String~
+        +eliminarConsumo(int id) void
+        -buscarConsumo(int id) Consumo
         +agregarCategoria(String nombre) boolean
         +getCategorias() List~Categoria~
         +modificarCategoria(int id, String nuevoNombre) void
@@ -117,6 +149,8 @@ classDiagram
         +listarMediosPago() List~MedioPago~
         +actualizarMedioPago(MedioPago m) void
         +eliminarMedioPago(int id) void
+        +actualizar(Consumo c) void
+        +eliminar(int id) void
     }
 
     class RepositorioArchivo {
@@ -151,6 +185,9 @@ classDiagram
         -agregarLinea(Path ruta, String linea, String que) void
         -escribirLineas(Path ruta, List~String~ lineas) void
         -limpiar(String s) String
+        +actualizar(Consumo c) void
+        +eliminar(int id) void
+        -reescribirConsumos(List~Consumo~ consumos) void
     }
 
     class Categoria {
@@ -208,16 +245,21 @@ classDiagram
         -double amarillo$
         +Limite(double monto, LocalDate fechaReferencia)
         +getMonto() double
+        +getFechaReferencia() LocalDate
         +saldo(double gastado) double
+        +porcentajeConsumido(double gastado) double
         +estado(double gastado) Semaforo
         +aplica(Consumo c) boolean*
         +mismoPeriodo(Limite otro) boolean*
+        +incluye(LocalDate fecha) boolean*
     }
 
     class LimiteMensual {
         +LimiteMensual(double monto, LocalDate fechaReferencia)
         +aplica(Consumo c) boolean
         +mismoPeriodo(Limite otro) boolean
+        +incluye(LocalDate fecha) boolean
+        +toString() String
     }
 
     class Semaforo {
@@ -242,6 +284,18 @@ classDiagram
         -LocalDate desde
         -LocalDate hasta
         +CriterioRangoFechas(LocalDate desde, LocalDate hasta)
+        +cumple(Consumo c) boolean
+    }
+
+    class CriterioMedioPago {
+        -MedioPago medioDePago
+        +CriterioMedioPago(MedioPago medioDePago)
+        +cumple(Consumo c) boolean
+    }
+
+    class CriterioPalabraClave {
+        -String palabraClave
+        +CriterioPalabraClave(String palabraClave)
         +cumple(Consumo c) boolean
     }
 
@@ -276,6 +330,8 @@ classDiagram
     Controller ..> LimiteMensual : create
     Controller ..> CriterioRangoFechas : create
     Controller ..> CriterioCategoria : create
+    Controller ..> CriterioMedioPago : create
+    Controller ..> CriterioPalabraClave : create
     Controller ..> ReporteEstadistico : create
     Controller ..> ReporteGastosPeriodo : create
 
@@ -303,8 +359,11 @@ classDiagram
 
     Criterio <|.. CriterioCategoria
     Criterio <|.. CriterioRangoFechas
+    Criterio <|.. CriterioMedioPago
+    Criterio <|.. CriterioPalabraClave
     Criterio ..> Consumo
     CriterioCategoria "1" --> "1" Categoria
+    CriterioMedioPago "1" --> "1" MedioPago
 
     Reporte <|.. ReporteEstadistico
     Reporte <|.. ReporteGastosPeriodo

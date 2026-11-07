@@ -17,15 +17,21 @@ classDiagram
         +Vista(Controller controller)
         +iniciar() void
         -registrarConsumo() void
+        -modificarConsumo() void
+        -eliminarConsumo() void
+        -consultarConsumos() void
+        -menuLimites() void
         -definirLimite() void
+        -modificarLimite() void
+        -consultarSaldo() void
         -menuCategorias() void
         -menuMediosPago() void
         -reporteEstadistico() void
         -menuGastosPeriodo() void
-        -consultarConsumos() void
         -mostrar(List~String~ mensajes) void
         -buscarCategoria(int id) Categoria
         -buscarMedio(int id) MedioPago
+        -elegirConsumo() Consumo
         -leerEntero(String texto) int
         -leerDecimal(String texto) double
         -leerFecha(String texto, boolean opcional) LocalDate
@@ -37,17 +43,24 @@ classDiagram
         -DateTimeFormatter FECHA$
         -DateTimeFormatter MES$
         -Categoria TODAS$
+        -MedioPago TODOS$
         -Controller controller
         -JFrame ventana
         -JTabbedPane pestanas
         -JComboBox~Categoria~ cmbCategoria
         -JComboBox~MedioPago~ cmbMedio
         -JComboBox~Categoria~ cmbFiltroCategoria
+        -JComboBox~MedioPago~ cmbFiltroMedio
         -List~Runnable~ recargas
         +VistaGrafica(Controller controller)
         +mostrar() JFrame
         -pestanaRegistrar() JComponent
+        -pestanaModificarEliminar() JComponent
+        -pestanaConsultar() JComponent
         -pestanaLimite() JComponent
+        -pestanaSaldo() JComponent
+        -semaforoDe(List~String~ mensajes) Semaforo
+        -pintarSemaforo(JLabel etiqueta, Semaforo estado) void
         -panelMaestro(String titulo, ...) JComponent
         -pestanaReporteEstadistico() JComponent
         -pestanaGastosPeriodo() JComponent
@@ -71,7 +84,13 @@ classDiagram
         +Controller(Repositorio repositorio)
         +ingresarDatosConsumo(double monto, LocalDate fecha, String descripcion, int cuotas, Categoria categoria, MedioPago medioDePago) List~String~
         -validarDatos(double monto, LocalDate fecha, int cuotas, Categoria categoria, MedioPago medioDePago) boolean
+        +listarConsumos() List~Consumo~
+        +modificarConsumo(int id, double monto, LocalDate fecha, String descripcion, int cuotas, Categoria categoria, MedioPago medioDePago) List~String~
+        +eliminarConsumo(int id) List~String~
         +definirLimite(double monto, YearMonth mes) List~String~
+        +modificarLimite(double monto, YearMonth mes) List~String~
+        +obtenerLimites() List~Limite~
+        +consultarSaldo(YearMonth mes) List~String~
         +agregarCategoria(String nombre) List~String~
         +modificarCategoria(int id, String nuevoNombre) List~String~
         +eliminarCategoria(int id) List~String~
@@ -81,7 +100,7 @@ classDiagram
         +eliminarMedioPago(int id) List~String~
         +obtenerMediosPago() List~MedioPago~
         +generarReporteEstadistico(LocalDate desde, LocalDate hasta) String
-        +consultarConsumos(LocalDate desde, LocalDate hasta, Categoria categoria) List~String~
+        +consultarConsumos(LocalDate desde, LocalDate hasta, Categoria categoria, MedioPago medioDePago, String palabraClave) List~String~
         +generarReporteGastos(LocalDate desde, LocalDate hasta) String
         +generarReporteGastosMensual(YearMonth mes) String
     }
@@ -99,6 +118,14 @@ classDiagram
     class LimiteMensual
     class CriterioRangoFechas
     class CriterioCategoria
+    class CriterioMedioPago
+    class CriterioPalabraClave
+    class Limite {
+        <<abstract>>
+    }
+    class Semaforo {
+        <<enumeration>>
+    }
     class ReporteEstadistico
     class ReporteGastosPeriodo
 
@@ -120,6 +147,12 @@ classDiagram
     Controller ..> LimiteMensual : «create»
     Controller ..> CriterioRangoFechas : «create»
     Controller ..> CriterioCategoria : «create»
+    Controller ..> CriterioMedioPago : «create»
+    Controller ..> CriterioPalabraClave : «create»
+    Controller ..> Limite : obtenerLimites()
+    VistaGrafica ..> Limite : muestra la lista
+    VistaGrafica ..> Semaforo : pinta el color
+    Limite <|-- LimiteMensual
     Controller ..> ReporteEstadistico : «create»
     Controller ..> ReporteGastosPeriodo : «create»
     Repositorio <|.. RepositorioArchivo
