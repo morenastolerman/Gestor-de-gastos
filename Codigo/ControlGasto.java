@@ -3,6 +3,7 @@ package Codigo;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -14,8 +15,9 @@ public class ControlGasto {
         this.repositorio = repositorio;
     }
 
-    // ===================== CU1: Registrar consumo y notificar =====================
+    // ===================== CU5: Definir y modificar límite =====================
 
+    // IllegalStateException si ya hay un límite para ese período
     public void agregarLimite(Limite l) {
         if (l == null)
             throw new IllegalArgumentException("El límite no puede ser null");
@@ -26,6 +28,59 @@ public class ControlGasto {
         limites.add(l);
     }
 
+    // reemplaza el límite del mismo período por el nuevo
+    // IllegalStateException si no hay un límite para ese período
+    public void modificarLimite(Limite nuevo) {
+        if (nuevo == null)
+            throw new IllegalArgumentException("El límite no puede ser null");
+        for (int i = 0; i < limites.size(); i++) {
+            if (limites.get(i).mismoPeriodo(nuevo)) {
+                limites.set(i, nuevo);
+                return;
+            }
+        }
+        throw new IllegalStateException("No hay un límite definido para ese período");
+    }
+
+    // lista de solo lectura: desde afuera no se pueden agregar ni borrar límites
+    public List<Limite> getLimites() {
+        return Collections.unmodifiableList(limites);
+    }
+
+    // ===================== CU6: Consultar saldo y estado =====================
+
+    // Devuelve el límite, lo gastado, el porcentaje, el saldo y el estado (semáforo) del período de la fecha.
+    // Si el estado es AMARILLO o ROJO agrega la alerta (CU12).
+    // IllegalArgumentException si no hay un límite para ese período
+    public List<String> consultarSaldo(LocalDate fecha) {
+        Limite l = buscarLimite(fecha);
+        double gastado = calcularGastado(l);
+        double saldo = l.saldo(gastado);
+        Semaforo estado = l.estado(gastado);
+
+        List<String> resultado = new ArrayList<>();
+        resultado.add(String.format("Límite: $%.2f", l.getMonto()));
+        resultado.add(String.format("Gastado: $%.2f (%.1f %% del límite)", gastado, l.porcentajeConsumido(gastado)));
+        if (saldo >= 0) {
+            resultado.add(String.format("Saldo disponible: $%.2f", saldo));
+        } else {
+            resultado.add(String.format("Saldo disponible: $0.00 (te pasaste $%.2f)", -saldo));
+        }
+        resultado.add("Estado: " + estado);
+        String alerta = alertaDe(l, gastado);
+        if (alerta != null) resultado.add(alerta);
+        return resultado;
+    }
+
+    private Limite buscarLimite(LocalDate fecha) {
+        for (Limite l : limites) {
+            if (l.incluye(fecha)) return l;
+        }
+        throw new IllegalArgumentException("No hay un límite definido para ese período");
+    }
+
+    // ===================== CU1: Registrar consumo y notificar =====================
+
     public List<String> registrar(Consumo c) {
         repositorio.guardar(c);
         return calcularAlertas(c);
@@ -34,16 +89,23 @@ public class ControlGasto {
         List<String> alertas = new ArrayList<>();
         for (Limite l : limites) {
             if (!l.aplica(c)) continue; // solo los límites que corresponden a este consumo
-            double gastado = calcularGastado(l);
-            Semaforo estado = l.estado(gastado);
-            String detalle = String.format(" - gastaste %.2f de %.2f", gastado, l.getMonto());
-            if (estado.equals(Semaforo.ROJO)) {
-                alertas.add("ALERTA: Límite excedido (ROJO)" + detalle);
-            } else if (estado.equals(Semaforo.AMARILLO)) {
-                alertas.add("ADVERTENCIA: Cerca del límite (AMARILLO)" + detalle);
-            }
+            String alerta = alertaDe(l, calcularGastado(l));
+            if (alerta != null) alertas.add(alerta);
         }
         return alertas;
+    }
+
+    // CU12: arma el mensaje de alerta según el semáforo (null si está en VERDE).
+    // Lo usan calcularAlertas (CU1 y CU2) y consultarSaldo (CU6).
+    private String alertaDe(Limite l, double gastado) {
+        Semaforo estado = l.estado(gastado);
+        String detalle = String.format(" - gastaste %.2f de %.2f", gastado, l.getMonto());
+        if (estado.equals(Semaforo.ROJO)) {
+            return "ALERTA: Límite excedido (ROJO)" + detalle;
+        } else if (estado.equals(Semaforo.AMARILLO)) {
+            return "ADVERTENCIA: Cerca del límite (AMARILLO)" + detalle;
+        }
+        return null;
     }
 
     // suma los consumos guardados que caen dentro del límite
@@ -167,7 +229,7 @@ public class ControlGasto {
         return false;
     }
 
-    // ===================== COMPARTIDO CU9 y CU10: consulta y reportes =====================
+    // ===================== COMPARTIDO CU4, CU9 y CU10: consulta y reportes =====================
 
     // Devuelve los consumos que cumplen TODOS los criterios, ordenados por fecha.
     // Lista de criterios vacía -> devuelve todos los consumos.
