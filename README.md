@@ -42,9 +42,9 @@ El sistema debe permitir consultar los consumos registrados y filtrarlos por per
 
 #### RF03. Gestión de límites (CU5)
 
-El sistema debe permitir definir y modificar límites monetarios de gastos para períodos determinados.
+El sistema debe permitir definir y modificar límites monetarios de gastos para períodos determinados. Hay un único límite por mes.
 
-Debe contemplar un límite mensual general y límites específicos por categoría, permitiendo controlar tanto el gasto total como el correspondiente a cada categoría.
+Por ahora se contempla un límite mensual general (`LimiteMensual`). Como `Limite` es una clase abstracta, el diseño permite agregar más adelante otros tipos de límite (por ejemplo, por categoría) creando una nueva subclase, sin modificar `ControlGasto`.
 
 El presupuesto debe reiniciarse automáticamente al comenzar un nuevo período mensual, sin eliminar el historial de consumos de los períodos anteriores.
 
@@ -160,27 +160,31 @@ El diseño del sistema contempla las siguientes clases, interfaces y enumeracion
 - `RepositorioInterfaz`
 - `RepositorioArchivo`
 - `CriterioRangoFechas`
+- `CriterioMedioPago`
+- `CriterioPalabraClave`
 - `CriterioCategoria`
 - `Limite` (clase abstracta)
 - `LimiteMensual`
 - `Categoria`
 - `Semaforo` (enumeración)
 
-El diagrama de clases completo, con atributos, métodos, relaciones y la justificación de GRASP y POO, está en [diagrama-de-clases.md](diagrama-de-clases.md).
+El diagrama de clases completo, con atributos, métodos, relaciones y la justificación de GRASP y POO, está en [diagrama-de-clases (5).md](Diagramas/diagrama-de-clases%20(5).md). También están el [diagrama conceptual](Diagramas/diagrama-conceptual.md), el [diagrama de la vista y el controlador](Diagramas/diagrama-vista-controlador.md) y el [diagrama de navegación de la interfaz gráfica](Diagramas/diagrama-de-navegacion-GUI.md).
 
-> En el código, `ReporteInterfaz` se llama `Reporte`, `RepositorioInterfaz` se llama `Repositorio` y `MedioDePago` se llama `MedioPago`. Además existe la interfaz `Criterio`, que implementan `CriterioRangoFechas` y `CriterioCategoria`, y la clase `Vista` (interfaz de usuario por consola).
+> En el código, `ReporteInterfaz` se llama `Reporte`, `RepositorioInterfaz` se llama `Repositorio` y `MedioDePago` se llama `MedioPago`. Además existe la interfaz `Criterio`, que implementan `CriterioRangoFechas`, `CriterioCategoria`, `CriterioMedioPago` y `CriterioPalabraClave`, y las clases `Vista` (interfaz por consola) y `VistaGrafica` (interfaz gráfica).
 
 #### Diagramas de secuencia
 
 - [CU1 – Registrar consumo y notificar](Diagramas/CU1.md)
 - [CU2 – Modificar consumo](Diagramas/CU2.md)
 - [CU3 – Eliminar consumo](Diagramas/CU3.md)
-- [CU5 – Definir límite](Diagramas/CU5.md)
-- [CU6 – Consultar saldo y estado](Diagramas/CU6.md)
+- [CU4 – Consultar y filtrar consumos](Diagramas/CU4.png)
+- [CU5 – Definir y modificar límite](Diagramas/CU5.png)
+- [CU6 – Consultar saldo y estado](Diagramas/CU6.png)
 - [CU7 – Gestionar categorías](Diagramas/CU7.md)
 - [CU8 – Gestionar medios de pago](Diagramas/CU8.md)
-- [CU9 – Consultar reporte estadístico](Diagramas/CU9.md)
-- [CU10 – Consultar gastos del período](Diagramas/CU910.md)
+- [CU9 – Consultar reporte estadístico](Diagramas/CU9%20(4).md)
+- [CU10 – Consultar gastos del período](Diagramas/CU10.md)
+- [CU11 – Cargar configuración inicial](Diagramas/CU11.md)
 
 ### P6. Consideraciones de implementación
 - **Lenguaje de programación:** Java.
