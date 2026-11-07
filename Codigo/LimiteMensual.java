@@ -11,7 +11,13 @@ public class LimiteMensual extends Limite {
 
     @Override
     public boolean aplica(Consumo c) {
-        return YearMonth.from(c.getFecha()).equals(YearMonth.from(this.fechaReferencia));
+        return incluye(c.getFecha());
+    }
+
+    // la fecha es del mismo mes y año que el límite
+    @Override
+    public boolean incluye(LocalDate fecha) {
+        return YearMonth.from(fecha).equals(YearMonth.from(this.fechaReferencia));
     }
 
     @Override
@@ -19,5 +25,11 @@ public class LimiteMensual extends Limite {
         if (!(otro instanceof LimiteMensual)) return false;
         return YearMonth.from(this.fechaReferencia)
                 .equals(YearMonth.from(((LimiteMensual) otro).fechaReferencia));
+    }
+
+    // ej.: "10/2026 - $10000.00"
+    @Override
+    public String toString() {
+        return String.format("%02d/%d - $%.2f", fechaReferencia.getMonthValue(), fechaReferencia.getYear(), monto);
     }
 }
