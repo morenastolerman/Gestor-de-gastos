@@ -22,9 +22,18 @@ public abstract class Limite {
         return monto;
     }
 
+    public LocalDate getFechaReferencia() {
+        return fechaReferencia;
+    }
+
     // +saldo(gastado: double) : double
     public double saldo(double gastado) {
         return monto - gastado;
+    }
+
+    // CU6: qué porcentaje del límite ya se gastó
+    public double porcentajeConsumido(double gastado) {
+        return gastado * 100 / monto;
     }
 
     // +estado(gastado: double) : Semaforo
@@ -37,7 +46,10 @@ public abstract class Limite {
         return Semaforo.VERDE;
     }
 
-    // Para ver si el consumo aplica a ese limite
+    // Para ver si el consumo aplica a ese limite (CU1, CU2, CU6, CU12)
     public abstract boolean aplica(Consumo c);
+    // Para ver si dos límites son del mismo período (CU5: definir y modificar)
     public abstract boolean mismoPeriodo(Limite otro);
+    // Para ver si una fecha cae dentro del período del límite (CU6: consultar saldo)
+    public abstract boolean incluye(LocalDate fecha);
 }
