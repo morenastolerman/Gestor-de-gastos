@@ -1,6 +1,7 @@
 package Codigo;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -46,6 +47,8 @@ public class VistaGrafica {
     private static final DateTimeFormatter MES = DateTimeFormatter.ofPattern("MM/yyyy");
     // Opción "todas" del filtro de categoría (id 0, igual que en la vista de consola)
     private static final Categoria TODAS = new Categoria(0, "Todas");
+    // Opción "todos" del filtro de medio de pago (CU4)
+    private static final MedioPago TODOS = new MedioPago(0, "Todos");
 
     private final Controller controller;
     private final JFrame ventana = new JFrame("Control de Gastos");
@@ -54,6 +57,7 @@ public class VistaGrafica {
     private final JComboBox<Categoria> cmbCategoria = new JComboBox<>();
     private final JComboBox<MedioPago> cmbMedio = new JComboBox<>();
     private final JComboBox<Categoria> cmbFiltroCategoria = new JComboBox<>();
+    private final JComboBox<MedioPago> cmbFiltroMedio = new JComboBox<>();
     private final List<Runnable> recargas = new ArrayList<>();
 
     public VistaGrafica(Controller controller) {
@@ -71,9 +75,14 @@ public class VistaGrafica {
         configurarCombo(cmbCategoria);
         configurarCombo(cmbMedio);
         configurarCombo(cmbFiltroCategoria);
+        configurarCombo(cmbFiltroMedio);
 
-        pestanas.addTab("Registrar consumo", pestanaRegistrar());
-        pestanas.addTab("Límite mensual", pestanaLimite());
+        // las pestañas están en el orden de los casos de uso
+        pestanas.addTab("Registrar consumo", pestanaRegistrar());                                    // CU1
+        pestanas.addTab("Modificar / eliminar consumo", pestanaModificarEliminar());                 // CU2 y CU3
+        pestanas.addTab("Consultar consumos", pestanaConsultar());                                   // CU4
+        pestanas.addTab("Límite mensual", pestanaLimite());                                          // CU5
+        pestanas.addTab("Saldo y estado", pestanaSaldo());                                           // CU6
         pestanas.addTab("Categorías", panelMaestro("Categorías", controller::obtenerCategorias,
                 Categoria::getId, Categoria::getNombre, controller::agregarCategoria,
                 controller::modificarCategoria, controller::eliminarCategoria));
@@ -82,14 +91,13 @@ public class VistaGrafica {
                 controller::modificarMedioPago, controller::eliminarMedioPago));
         pestanas.addTab("Reporte estadístico", pestanaReporteEstadistico());
         pestanas.addTab("Gastos del período", pestanaGastosPeriodo());
-        pestanas.insertTab("Modificar / eliminar consumo", null, pestanaModificarEliminar(), null, 1); // CU2 y CU3
         // al cambiar de pestaña se actualizan listas y combos (por si cambiaron categorías o medios)
         pestanas.addChangeListener(e -> actualizarListas());
         actualizarListas();
 
         ventana.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         ventana.add(pestanas);
-        ventana.setSize(1000, 600);
+        ventana.setSize(1150, 620);
         ventana.setLocationRelativeTo(null);
         ventana.setVisible(true);
         return ventana;
@@ -128,26 +136,148 @@ public class VistaGrafica {
         return conBoton(form, btnRegistrar);
     }
 
-    // CU5: Definir límite mensual
+    // CU4: Consultar y filtrar consumos (todos los filtros son opcionales)
+    private JComponent pestanaConsultar() {
+        JTextField txtDesde = new JTextField(12);
+        JTextField txtHasta = new JTextField(12);
+        JTextField txtPalabra = new JTextField(20);
+        JTextArea resultado = areaResultado();
+
+        JButton btnConsultar = new JButton("Consultar");
+        btnConsultar.addActionListener(e -> ejecutar(() -> {
+            LocalDate desde = leerFecha(txtDesde, "desde", true);
+            LocalDate hasta = leerFecha(txtHasta, "hasta", true);
+            Categoria elegida = (Categoria) cmbFiltroCategoria.getSelectedItem();
+            Categoria categoria = (elegida == null || elegida.getId() == 0) ? null : elegida;
+            MedioPago medioElegido = (MedioPago) cmbFiltroMedio.getSelectedItem();
+            MedioPago medio = (medioElegido == null || medioElegido.getId() == 0) ? null : medioElegido;
+            resultado.setText(String.join("\n",
+                    controller.consultarConsumos(desde, hasta, categoria, medio, txtPalabra.getText())));
+            resultado.setCaretPosition(0);
+        }));
+
+        JPanel form = formulario(
+                new String[] {"Desde (dd/MM/yyyy, opcional)", "Hasta (dd/MM/yyyy, opcional)", "Categoría",
+                        "Medio de pago", "Palabra clave o #hashtag (opcional)"},
+                new JComponent[] {txtDesde, txtHasta, cmbFiltroCategoria, cmbFiltroMedio, txtPalabra});
+        return conResultado(form, btnConsultar, resultado);
+    }
+
+    // CU5: Definir y modificar límite mensual
     private JComponent pestanaLimite() {
         JTextField txtMonto = new JTextField(12);
         JTextField txtMes = new JTextField(YearMonth.now().format(MES), 12);
+
+        // lista de límites definidos; al elegir uno se copian sus datos al formulario para modificarlo
+        DefaultListModel<Limite> modelo = new DefaultListModel<>();
+        JList<Limite> lista = new JList<>(modelo);
+        lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        recargas.add(() -> {
+            modelo.clear();
+            for (Limite l : controller.obtenerLimites()) modelo.addElement(l);
+        });
+        lista.addListSelectionListener(e -> {
+            Limite elegido = lista.getSelectedValue();
+            if (e.getValueIsAdjusting() || elegido == null) return;
+            txtMonto.setText(String.valueOf(elegido.getMonto()));
+            txtMes.setText(YearMonth.from(elegido.getFechaReferencia()).format(MES));
+        });
 
         JButton btnDefinir = new JButton("Definir límite");
         btnDefinir.addActionListener(e -> ejecutar(() -> {
             double monto = leerDecimal(txtMonto, "el monto del límite");
             YearMonth mes = leerMes(txtMes, "el mes");
             mostrar(controller.definirLimite(monto, mes));
+            actualizarListas();
+        }));
+
+        JButton btnModificar = new JButton("Modificar límite");
+        btnModificar.addActionListener(e -> ejecutar(() -> {
+            double monto = leerDecimal(txtMonto, "el monto del límite");
+            YearMonth mes = leerMes(txtMes, "el mes");
+            mostrar(controller.modificarLimite(monto, mes));
+            actualizarListas();
         }));
 
         JPanel form = formulario(new String[] {"Monto del límite", "Mes (MM/yyyy)"},
                 new JComponent[] {txtMonto, txtMes});
-        JPanel nota = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        nota.add(new JLabel("Hay un solo límite por mes. Se avisa al registrar un consumo si el gasto se acerca o supera el límite."));
-        JPanel centro = new JPanel(new BorderLayout());
-        centro.add(form, BorderLayout.NORTH);
-        centro.add(nota, BorderLayout.CENTER);
-        return conBoton(centro, btnDefinir);
+        JPanel botones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        botones.add(btnDefinir);
+        botones.add(btnModificar);
+
+        JPanel norte = new JPanel(new BorderLayout());
+        norte.add(form, BorderLayout.CENTER);
+        norte.add(new JLabel("Hay un solo límite por mes. Para modificarlo, elegilo en la lista, cambiá el monto y tocá \"Modificar límite\"."),
+                BorderLayout.SOUTH);
+
+        JPanel panel = new JPanel(new BorderLayout(8, 8));
+        panel.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+        panel.add(norte, BorderLayout.NORTH);
+        panel.add(new JScrollPane(lista), BorderLayout.CENTER);
+        panel.add(botones, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    // CU6: Consultar saldo y estado (con semáforo de colores)
+    private JComponent pestanaSaldo() {
+        JTextField txtMes = new JTextField(YearMonth.now().format(MES), 12);
+        JTextArea resultado = areaResultado();
+
+        // indicador visual tipo semáforo
+        JLabel semaforo = new JLabel("Sin consultar", JLabel.CENTER);
+        semaforo.setOpaque(true);
+        semaforo.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 22));
+        semaforo.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+        pintarSemaforo(semaforo, null);
+
+        JButton btnConsultar = new JButton("Consultar");
+        btnConsultar.addActionListener(e -> ejecutar(() -> {
+            YearMonth mes = leerMes(txtMes, "el mes");
+            List<String> mensajes = controller.consultarSaldo(mes);
+            resultado.setText(String.join("\n", mensajes));
+            pintarSemaforo(semaforo, semaforoDe(mensajes));
+        }));
+
+        JPanel form = formulario(new String[] {"Mes (MM/yyyy)"}, new JComponent[] {txtMes});
+        JPanel botones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        botones.add(btnConsultar);
+        JPanel norte = new JPanel(new BorderLayout());
+        norte.add(form, BorderLayout.CENTER);
+        norte.add(botones, BorderLayout.SOUTH);
+
+        JPanel centro = new JPanel(new BorderLayout(8, 8));
+        centro.add(semaforo, BorderLayout.NORTH);
+        centro.add(new JScrollPane(resultado), BorderLayout.CENTER);
+
+        JPanel panel = new JPanel(new BorderLayout(8, 8));
+        panel.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+        panel.add(norte, BorderLayout.NORTH);
+        panel.add(centro, BorderLayout.CENTER);
+        return panel;
+    }
+
+    // busca la línea "Estado: X" que arma el modelo; null si no hay límite para ese mes
+    private Semaforo semaforoDe(List<String> mensajes) {
+        for (String m : mensajes) {
+            if (m.startsWith("Estado: ")) return Semaforo.valueOf(m.substring("Estado: ".length()));
+        }
+        return null;
+    }
+
+    private void pintarSemaforo(JLabel etiqueta, Semaforo estado) {
+        if (estado == null) {
+            etiqueta.setText("Sin límite para ese mes");
+            etiqueta.setBackground(new Color(225, 225, 225));
+        } else if (estado == Semaforo.VERDE) {
+            etiqueta.setText("VERDE - menos del 80 % del límite");
+            etiqueta.setBackground(new Color(134, 239, 172));
+        } else if (estado == Semaforo.AMARILLO) {
+            etiqueta.setText("AMARILLO - entre el 80 % y el 95 % del límite");
+            etiqueta.setBackground(new Color(253, 224, 71));
+        } else {
+            etiqueta.setText("ROJO - 95 % o más del límite");
+            etiqueta.setBackground(new Color(252, 165, 165));
+        }
     }
 
     // CU7 y CU8: mismo panel para categorías y para medios de pago
@@ -237,22 +367,12 @@ public class VistaGrafica {
         return conResultado(form, btnGenerar, resultado);
     }
 
-    // CU10: Gastos del período (consulta con filtros y reportes)
+    // CU10: Gastos del período (reportes por rango de fechas o por mes)
     private JComponent pestanaGastosPeriodo() {
         JTextField txtDesde = new JTextField(12);
         JTextField txtHasta = new JTextField(12);
         JTextField txtMes = new JTextField(YearMonth.now().format(MES), 12);
         JTextArea resultado = areaResultado();
-
-        JButton btnConsultar = new JButton("Consultar consumos");
-        btnConsultar.addActionListener(e -> ejecutar(() -> {
-            LocalDate desde = leerFecha(txtDesde, "desde", true);
-            LocalDate hasta = leerFecha(txtHasta, "hasta", true);
-            Categoria elegida = (Categoria) cmbFiltroCategoria.getSelectedItem();
-            Categoria categoria = (elegida == null || elegida.getId() == 0) ? null : elegida;
-            resultado.setText(String.join("\n", controller.consultarConsumos(desde, hasta, categoria)));
-            resultado.setCaretPosition(0);
-        }));
 
         JButton btnRango = new JButton("Reporte por rango");
         btnRango.addActionListener(e -> ejecutar(() -> {
@@ -270,10 +390,9 @@ public class VistaGrafica {
         }));
 
         JPanel form = formulario(
-                new String[] {"Desde (dd/MM/yyyy, opcional)", "Hasta (dd/MM/yyyy, opcional)", "Categoría", "Mes (MM/yyyy)"},
-                new JComponent[] {txtDesde, txtHasta, cmbFiltroCategoria, txtMes});
+                new String[] {"Desde (dd/MM/yyyy)", "Hasta (dd/MM/yyyy)", "Mes (MM/yyyy)"},
+                new JComponent[] {txtDesde, txtHasta, txtMes});
         JPanel botones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        botones.add(btnConsultar);
         botones.add(btnRango);
         botones.add(btnMes);
 
@@ -300,7 +419,12 @@ public class VistaGrafica {
             cmbFiltroCategoria.addItem(c);
         }
         cmbMedio.removeAllItems();
-        for (MedioPago m : controller.obtenerMediosPago()) cmbMedio.addItem(m);
+        cmbFiltroMedio.removeAllItems();
+        cmbFiltroMedio.addItem(TODOS);
+        for (MedioPago m : controller.obtenerMediosPago()) {
+            cmbMedio.addItem(m);
+            cmbFiltroMedio.addItem(m);
+        }
         for (Runnable recarga : recargas) recarga.run();
     }
 
