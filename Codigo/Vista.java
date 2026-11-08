@@ -21,6 +21,7 @@ public class Vista {
     // ===================== MENÚ PRINCIPAL =====================
 
     public void iniciar() {
+        mostrar(controller.cargarConfiguracion());   // CU11: carga la configuración inicial
         int opcion;
         do {
             // cada opción tiene el mismo número que su caso de uso
