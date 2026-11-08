@@ -25,6 +25,7 @@ public class ControlGasto {
             if (existente.mismoPeriodo(l))
                 throw new IllegalStateException("Ya existe un límite para ese período");
         }
+        repositorio.guardarLimite(l);   // CU11: se guarda para recuperarlo al iniciar
         limites.add(l);
     }
 
@@ -35,6 +36,7 @@ public class ControlGasto {
             throw new IllegalArgumentException("El límite no puede ser null");
         for (int i = 0; i < limites.size(); i++) {
             if (limites.get(i).mismoPeriodo(nuevo)) {
+                repositorio.actualizarLimite(nuevo);   // CU11: la modificación también queda guardada
                 limites.set(i, nuevo);
                 return;
             }
@@ -45,6 +47,15 @@ public class ControlGasto {
     // lista de solo lectura: desde afuera no se pueden agregar ni borrar límites
     public List<Limite> getLimites() {
         return Collections.unmodifiableList(limites);
+    }
+
+    // ===================== CU11: Cargar configuración inicial =====================
+
+    // recupera los límites guardados (categorías, medios y consumos se leen del repositorio cuando se piden)
+    // RuntimeException si no se puede leer el archivo
+    public void cargarConfiguracion() {
+        limites.clear();
+        limites.addAll(repositorio.listarLimites());
     }
 
     // ===================== CU6: Consultar saldo y estado =====================
