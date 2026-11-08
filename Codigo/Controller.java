@@ -285,4 +285,18 @@ public class Controller {
         }
         return mensajes;
     }
+
+    // ===================== CU11: Cargar configuración inicial =====================
+
+    // Devuelve un solo mensaje: si se pudo cargar o cuál fue el error
+    public List<String> cargarConfiguracion() {
+        List<String> mensajes = new ArrayList<>();
+        try {
+            controlGasto.cargarConfiguracion();
+            mensajes.add("Configuración cargada correctamente");
+        } catch (RuntimeException e) {
+            mensajes.add("No se pudo cargar la configuración: " + e.getMessage());
+        }
+        return mensajes;
+    }
 }
