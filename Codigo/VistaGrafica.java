@@ -93,13 +93,15 @@ public class VistaGrafica {
         pestanas.addTab("Gastos del período", pestanaGastosPeriodo());
         // al cambiar de pestaña se actualizan listas y combos (por si cambiaron categorías o medios)
         pestanas.addChangeListener(e -> actualizarListas());
-        actualizarListas();
+        List<String> carga = controller.cargarConfiguracion();   // CU11: recupera los límites guardados
+        ejecutar(this::actualizarListas);                        // CU11: carga categorías, medios, límites y consumos
 
         ventana.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         ventana.add(pestanas);
         ventana.setSize(1150, 620);
         ventana.setLocationRelativeTo(null);
         ventana.setVisible(true);
+        if (!carga.get(0).contains("correctamente")) mostrar(carga);   // CU11: solo avisa si algo falló
         return ventana;
     }
 
