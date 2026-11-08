@@ -393,3 +393,4 @@ classDiagram
     Reporte ..> Consumo
     ReporteGastosPeriodo "1" --> "0..1" Categoria
 ```
+    
