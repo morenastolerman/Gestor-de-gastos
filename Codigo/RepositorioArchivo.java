@@ -18,15 +18,21 @@ public class RepositorioArchivo implements Repositorio {
     private final Path archivo;            // consumos
     private final Path archivoMedios;      // medios de pago
     private final Path archivoCategorias;  // categorías
+    private final Path archivoLimites;     // límites mensuales
 
-    public RepositorioArchivo(String rutaConsumos, String rutaMedios, String rutaCategorias) {
+    public RepositorioArchivo(String rutaConsumos, String rutaMedios, String rutaCategorias, String rutaLimites) {
         this.archivo = Paths.get(rutaConsumos);
         this.archivoMedios = Paths.get(rutaMedios);
         this.archivoCategorias = Paths.get(rutaCategorias);
+        this.archivoLimites = Paths.get(rutaLimites);
+    }
+
+    public RepositorioArchivo(String rutaConsumos, String rutaMedios, String rutaCategorias) {
+        this(rutaConsumos, rutaMedios, rutaCategorias, "limites.csv");
     }
 
     public RepositorioArchivo() {
-        this("consumos.csv", "medios.csv", "categorias.csv");
+        this("consumos.csv", "medios.csv", "categorias.csv", "limites.csv");
     }
 
     // ===================== CU1: Registrar consumo y notificar =====================
@@ -281,5 +287,48 @@ public class RepositorioArchivo implements Repositorio {
         List<String> lineas = new ArrayList<>();
         for (Consumo c : consumos) lineas.add(aLinea(c));
         escribirLineas(archivo, lineas);
+    }
+
+    // ===================== CU11: Cargar configuración inicial =====================
+
+    @Override
+    public void guardarLimite(Limite l) {
+        agregarLinea(archivoLimites, limiteALinea(l), "el límite");
+    }
+
+    @Override
+    public List<Limite> listarLimites() {
+        List<Limite> limites = new ArrayList<>();
+        for (String linea : leerLineas(archivoLimites)) {
+            String[] p = linea.split(SEP, -1);
+            // por ahora el único tipo de límite es el mensual
+            if (p[0].equals("MENSUAL")) {
+                limites.add(new LimiteMensual(Double.parseDouble(p[1]), LocalDate.parse(p[2])));
+            }
+        }
+        return limites;
+    }
+
+    @Override
+    public void actualizarLimite(Limite l) {
+        List<Limite> limites = listarLimites();
+        for (int i = 0; i < limites.size(); i++) {
+            if (limites.get(i).mismoPeriodo(l)) {
+                limites.set(i, l);
+                break;
+            }
+        }
+        reescribirLimites(limites);
+    }
+
+    // tipo;monto;fechaReferencia
+    private String limiteALinea(Limite l) {
+        return String.join(SEP, "MENSUAL", String.valueOf(l.getMonto()), l.getFechaReferencia().toString());
+    }
+
+    private void reescribirLimites(List<Limite> limites) {
+        List<String> lineas = new ArrayList<>();
+        for (Limite l : limites) lineas.add(limiteALinea(l));
+        escribirLineas(archivoLimites, lineas);
     }
 }
