@@ -26,4 +26,9 @@ public interface Repositorio {
 
     // ===================== CU3: Eliminar consumo =====================
     void eliminar(int id);
+
+    // ===================== CU11: Cargar configuración inicial =====================
+    void guardarLimite(Limite l);                // agrega el límite a limites.csv
+    List<Limite> listarLimites();                // límites guardados (lista vacía si no hay)
+    void actualizarLimite(Limite l);             // reemplaza el límite del mismo período (CU5: modificar)
 }
