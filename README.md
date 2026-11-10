@@ -168,7 +168,7 @@ El diseño del sistema contempla las siguientes clases, interfaces y enumeracion
 - `Categoria`
 - `Semaforo` (enumeración)
 
-El diagrama de clases completo, con atributos, métodos, relaciones y la justificación de GRASP y POO, está en [diagrama-de-clases (5).md](Diagramas/diagrama-de-clases%20(5).md). También están el [diagrama conceptual](Diagramas/diagrama-conceptual.md), el [diagrama de la vista y el controlador](Diagramas/diagrama-vista-controlador.md) y el [diagrama de navegación de la interfaz gráfica](Diagramas/diagrama-de-navegacion-GUI.md).
+El diagrama de clases completo, con atributos, métodos, relaciones y la justificación de GRASP y POO, está en [diagrama-de-clases.md](Diagramas/diagrama-de-clases.md). También están el [diagrama conceptual](Diagramas/diagrama-conceptual.md), el [diagrama de la vista y el controlador](Diagramas/diagrama-vista-controlador.md) y el [diagrama de navegación de la interfaz gráfica](Diagramas/diagrama-de-navegacion-GUI.md).
 
 > En el código, `ReporteInterfaz` se llama `Reporte`, `RepositorioInterfaz` se llama `Repositorio` y `MedioDePago` se llama `MedioPago`. Además existe la interfaz `Criterio`, que implementan `CriterioRangoFechas`, `CriterioCategoria`, `CriterioMedioPago` y `CriterioPalabraClave`, y las clases `Vista` (interfaz por consola) y `VistaGrafica` (interfaz gráfica).
 
@@ -185,6 +185,7 @@ El diagrama de clases completo, con atributos, métodos, relaciones y la justifi
 - [CU9 – Consultar reporte estadístico](Diagramas/CU9%20(4).md)
 - [CU10 – Consultar gastos del período](Diagramas/CU10.md)
 - [CU11 – Cargar configuración inicial](Diagramas/CU11.md)
+- [CU12 – Validar y notificar alertas de exceso](Diagramas/CU12.md)
 
 ### P6. Consideraciones de implementación
 - **Lenguaje de programación:** Java.
